@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "API (Nest) - run task",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm dev",
+      "cwd": "${workspaceFolder}/apps/server"
+      
+    },
+    {
+      "name": "Web (Vite) - run task",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "pnpm dev",
+      "cwd": "${workspaceFolder}/apps/client"
+    }
+  ],
+  "compounds": [
+    {
+      "name": "Start: API + Web",
+      "configurations": ["API (Nest) - run task", "Web (Vite) - run task"]
+    }
+  ]
+}
