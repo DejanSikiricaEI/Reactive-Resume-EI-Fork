@@ -1,8 +1,7 @@
 import { t } from "@lingui/macro";
 import { Input } from "@reactive-resume/ui";
 import { useQuery } from "@tanstack/react-query";
-import { useCallback } from "react";
-import { useDebounceValue } from "usehooks-ts";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { axios } from "@/client/libs/axios";
 
@@ -15,7 +14,20 @@ type HRResult = {
 };
 
 export const HRSearch = () => {
-  const [query, setQuery] = useDebounceValue<string>("", 400);
+  const [rawQuery, setRawQuery] = useState("");
+  const [query, setQuery] = useState("");
+
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const DELAY = 1500;
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
+  }, []);
 
   const fetchHR = useCallback(async () => {
     const res = await axios.get<HRResult[]>("/hr/search", { params: { q: query } });
@@ -25,7 +37,7 @@ export const HRSearch = () => {
   const { data: results, isFetching } = useQuery({
     queryKey: ["hr-search", query],
     queryFn: fetchHR,
-    enabled: query.length > 2,
+    enabled: query.length >= 2,
     keepPreviousData: true,
   });
 
@@ -33,13 +45,35 @@ export const HRSearch = () => {
     <div className="space-y-2">
       <Input
         placeholder={t`Search people, emails...`}
-        value={query}
-        onChange={(e) => setQuery((e.target as HTMLInputElement).value)}
+        value={rawQuery}
+        onChange={(e) => {
+          const value = (e.target as HTMLInputElement).value;
+
+          setRawQuery(value);
+
+          if (value.length < 2) {
+            if (timerRef.current) {
+              clearTimeout(timerRef.current);
+              timerRef.current = null;
+            }
+            setQuery(value);
+            return;
+          }
+
+          if (timerRef.current) {
+            clearTimeout(timerRef.current);
+          }
+
+          timerRef.current = setTimeout(() => {
+            setQuery(value);
+            timerRef.current = null;
+          }, DELAY);
+        }}
       />
 
       {isFetching && <div className="text-sm opacity-70">{t`Searching...`}</div>}
 
-      {!isFetching && query.length > 2 && (
+      {!isFetching && query.length >= 2 && (
         <ul className="max-h-52 divide-y overflow-auto rounded border bg-background/50">
           {results && results.length > 0 ? (
             results.map((r) => (
