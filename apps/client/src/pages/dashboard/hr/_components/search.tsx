@@ -32,7 +32,7 @@ export const HRSearch = () => {
   return (
     <div className="space-y-2">
       <Input
-        placeholder={t`Search people, email or id`}
+        placeholder={t`Search people, emails...`}
         value={query}
         onChange={(e) => setQuery((e.target as HTMLInputElement).value)}
       />
