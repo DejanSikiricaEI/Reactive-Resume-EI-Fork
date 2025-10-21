@@ -1,6 +1,6 @@
 import { t } from "@lingui/macro";
 import {
-  CopySimpleIcon,
+  // CopySimpleIcon,
   FolderOpenIcon,
   LockIcon,
   LockOpenIcon,
@@ -44,9 +44,9 @@ export const ResumeCard = ({ resume }: Props) => {
     open("update", { id: "resume", item: resume });
   };
 
-  const onDuplicate = () => {
-    open("duplicate", { id: "resume", item: resume });
-  };
+  // const onDuplicate = () => {
+  //   open("duplicate", { id: "resume", item: resume });
+  // };
 
   const onLockChange = () => {
     lockOpen(resume.locked ? "update" : "create", { id: "lock", item: resume });
@@ -100,10 +100,10 @@ export const ResumeCard = ({ resume }: Props) => {
           <PencilSimpleIcon size={14} className="mr-2" />
           {t`Rename`}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={onDuplicate}>
+        {/* <DropdownMenuItem onClick={onDuplicate}>
           <CopySimpleIcon size={14} className="mr-2" />
           {t`Duplicate`}
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
         {resume.locked ? (
           <DropdownMenuItem onClick={onLockChange}>
             <LockOpenIcon size={14} className="mr-2" />

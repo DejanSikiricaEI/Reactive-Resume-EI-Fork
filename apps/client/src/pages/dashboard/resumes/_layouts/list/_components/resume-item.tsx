@@ -85,7 +85,7 @@ export const ResumeListItem = ({ resume }: Props) => {
           <PencilSimpleIcon size={14} className="mr-2" />
           {t`Rename`}
         </DropdownMenuItem>
-        <DropdownMenuItem
+        {/* <DropdownMenuItem
           onClick={(event) => {
             event.stopPropagation();
             onDuplicate();
@@ -93,7 +93,7 @@ export const ResumeListItem = ({ resume }: Props) => {
         >
           <CopySimpleIcon size={14} className="mr-2" />
           {t`Duplicate`}
-        </DropdownMenuItem>
+        </DropdownMenuItem> */}
         {resume.locked ? (
           <DropdownMenuItem
             onClick={(event) => {
