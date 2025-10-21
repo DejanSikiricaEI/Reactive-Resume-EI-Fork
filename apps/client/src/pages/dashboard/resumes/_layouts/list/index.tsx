@@ -11,19 +11,23 @@ import { ResumeListItem } from "./_components/resume-item";
 export const ListView = () => {
   const { resumes, loading } = useResumes();
 
+  const hasResumes = !!resumes && resumes.length > 0;
+
   return (
     <div className="grid gap-y-2">
-      <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }}>
-        <CreateResumeListItem />
-      </motion.div>
-
-      <motion.div
-        initial={{ opacity: 0, y: -50 }}
-        animate={{ opacity: 1, y: 0, transition: { delay: 0.1 } }}
-      >
-        <ImportResumeListItem />
-      </motion.div>
-
+      {!hasResumes && (
+        <motion.div initial={{ opacity: 0, y: -50 }} animate={{ opacity: 1, y: 0 }}>
+          <CreateResumeListItem />
+        </motion.div>
+      )}
+      {!hasResumes && (
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0, transition: { delay: 0.1 } }}
+        >
+          <ImportResumeListItem />
+        </motion.div>
+    )}
       {loading &&
         Array.from({ length: 4 }).map((_, i) => (
           <div
