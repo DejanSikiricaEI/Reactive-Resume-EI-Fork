@@ -1,16 +1,33 @@
 import { Controller, Get, Query } from "@nestjs/common";
+import { PrismaService } from "nestjs-prisma";
 
 @Controller("hr")
 export class HRController {
+  constructor(private readonly prisma: PrismaService) {}
+
   @Get("search")
-  search(@Query("q") q?: string, @Query("skill") skill?: string) {
-    // Placeholder response. Replace with real logic later.
-    return [
-      {
-        id: "sample-1",
-        name: q ? `Result for ${q}` : "Sample Result",
-        email: skill ? `${skill}@example.com` : undefined,
+  async search(@Query("person") person?: string, @Query("skill") _skill?: string) {
+    // If no person query provided, return empty array to avoid returning all users
+    if (!person) return [];
+
+    const q = person.trim();
+
+    // Search users where name, lastName or email contains the query (case-insensitive)
+    const users = await this.prisma.user.findMany({
+      where: {
+        OR: [
+          { name: { contains: q, mode: "insensitive" } },
+          { username: { contains: q, mode: "insensitive" } },
+          { email: { contains: q, mode: "insensitive" } },
+        ],
       },
-    ];
+      take: 50,
+    });
+
+    return users.map((u) => ({
+      id: u.id,
+      name: [u.name, u.username].filter(Boolean).join(" "),
+      email: u.email,
+    }));
   }
 }

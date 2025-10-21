@@ -83,7 +83,7 @@ export const Sidebar = ({ setOpen }: SidebarProps) => {
   const sidebarItems: SidebarItem[] = [
     {
       path: "/dashboard/resumes",
-      name: t`Resumes`,
+      name: t`Resume`,
       shortcut: "⇧R",
       icon: <ReadCvLogoIcon />,
     },

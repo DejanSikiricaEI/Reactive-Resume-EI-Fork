@@ -15,7 +15,7 @@ type HRResult = {
 };
 
 export const HRSearch = () => {
-  const [filters, setFilters] = useState({ q: "", skill: "" });
+  const [filters, setFilters] = useState({ person: "", skill: "" });
   const [searchTrigger, setSearchTrigger] = useState(0);
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -34,7 +34,7 @@ export const HRSearch = () => {
   const fetchHR = async () => {
     const res = await axios.get<HRResult[]>("/hr/search", {
       params: {
-        q: filters.q,
+        person: filters.person,
         skill: filters.skill,
       },
     });
@@ -63,7 +63,7 @@ export const HRSearch = () => {
     }
 
     timerRef.current = setTimeout(() => {
-      if (filters.q.length >= 2 || filters.skill.length >= 2) {
+      if (filters.person.length >= 2 || filters.skill.length >= 2) {
         setSearchTrigger((s) => s + 1);
       }
       timerRef.current = null;
@@ -75,14 +75,14 @@ export const HRSearch = () => {
         timerRef.current = null;
       }
     };
-  }, [filters.q, filters.skill]);
+  }, [filters.person, filters.skill]);
 
   return (
     <div className="space-y-2">
       <Input
-        name="q"
+        name="person"
         placeholder={t`Search people, emails...`}
-        value={filters.q}
+        value={filters.person}
         onChange={handleChange}
       />
 
@@ -90,7 +90,7 @@ export const HRSearch = () => {
 
       {isFetching && <div className="text-sm opacity-70">{t`Searching...`}</div>}
 
-      {!isFetching && (filters.q.length >= 2 || filters.skill.length >= 2) && (
+      {!isFetching && (filters.person.length >= 2 || filters.skill.length >= 2) && (
         <ul className="max-h-52 divide-y overflow-auto rounded border bg-background/50">
           {results && results.length > 0 ? (
             results.map((r) => (
