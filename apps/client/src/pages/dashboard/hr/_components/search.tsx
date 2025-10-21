@@ -1,6 +1,7 @@
 import { t } from "@lingui/macro";
 import { Input } from "@reactive-resume/ui";
 import { useQuery } from "@tanstack/react-query";
+import type { ChangeEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { axios } from "@/client/libs/axios";
@@ -15,6 +16,7 @@ type HRResult = {
 
 export const HRSearch = () => {
   const [rawQuery, setRawQuery] = useState("");
+  const [rawSkill, setRawSkill] = useState("");
   const [query, setQuery] = useState("");
 
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -41,35 +43,42 @@ export const HRSearch = () => {
     keepPreviousData: true,
   });
 
+  function handleChange(e: ChangeEvent<HTMLInputElement>) {
+    const { name, value } = e.target;
+
+    // keep each input controlled independently
+    if (name === "q") setRawQuery(value);
+    else if (name === "skill") setRawSkill(value);
+
+    // restart debounce timer on each change
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
+    // if the value is very short, update query immediately
+    if (value.length < 2) {
+      setQuery(value);
+      return;
+    }
+
+    timerRef.current = setTimeout(() => {
+      setQuery(value);
+      timerRef.current = null;
+    }, DELAY);
+  }
+
   return (
     <div className="space-y-2">
+      {/* Shared handler used by both inputs - debounces and sets `query` to the last-changed input's value */}
       <Input
+        name="q"
         placeholder={t`Search people, emails...`}
         value={rawQuery}
-        onChange={(e) => {
-          const value = (e.target as HTMLInputElement).value;
-
-          setRawQuery(value);
-
-          if (value.length < 2) {
-            if (timerRef.current) {
-              clearTimeout(timerRef.current);
-              timerRef.current = null;
-            }
-            setQuery(value);
-            return;
-          }
-
-          if (timerRef.current) {
-            clearTimeout(timerRef.current);
-          }
-
-          timerRef.current = setTimeout(() => {
-            setQuery(value);
-            timerRef.current = null;
-          }, DELAY);
-        }}
+        onChange={handleChange}
       />
+
+      <Input name="skill" placeholder={t`Skill..`} value={rawSkill} onChange={handleChange} />
 
       {isFetching && <div className="text-sm opacity-70">{t`Searching...`}</div>}
 
