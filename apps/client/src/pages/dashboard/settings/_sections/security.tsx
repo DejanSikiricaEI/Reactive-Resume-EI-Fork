@@ -1,5 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { t, Trans } from "@lingui/macro";
+// import { t, Trans } from "@lingui/macro";
+import { t } from "@lingui/macro";
 import {
   Accordion,
   AccordionContent,
@@ -125,7 +126,7 @@ export const SecuritySettings = () => {
           </AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="two-factor">
+        {/* <AccordionItem value="two-factor">
           <AccordionTrigger>{t`Two-Factor Authentication`}</AccordionTrigger>
           <AccordionContent>
             {user?.twoFactorEnabled ? (
@@ -164,7 +165,7 @@ export const SecuritySettings = () => {
               </Button>
             )}
           </AccordionContent>
-        </AccordionItem>
+        </AccordionItem> */}
       </Accordion>
     </div>
   );

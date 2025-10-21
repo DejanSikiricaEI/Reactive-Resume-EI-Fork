@@ -71,15 +71,6 @@ export const BuilderLayout = () => {
             isDragging={rightHandle.isDragging}
             onDragging={rightHandle.setDragging}
           />
-          <Panel
-            minSize={25}
-            maxSize={45}
-            defaultSize={30}
-            className={cn("z-10 bg-background", !rightHandle.isDragging && "transition-[flex]")}
-            onResize={rightSetSize}
-          >
-            <RightSidebar />
-          </Panel>
         </PanelGroup>
       </div>
     );
