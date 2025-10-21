@@ -12,6 +12,7 @@ import { ContributorsModule } from "./contributors/contributors.module";
 import { DatabaseModule } from "./database/database.module";
 import { FeatureModule } from "./feature/feature.module";
 import { HealthModule } from "./health/health.module";
+import { HRModule } from "./hr/hr.module";
 import { MailModule } from "./mail/mail.module";
 import { PrinterModule } from "./printer/printer.module";
 import { ResumeModule } from "./resume/resume.module";
@@ -31,6 +32,7 @@ import { UserModule } from "./user/user.module";
     // Feature Modules
     AuthModule.register(),
     UserModule,
+    HRModule,
     ResumeModule,
     StorageModule,
     PrinterModule,
