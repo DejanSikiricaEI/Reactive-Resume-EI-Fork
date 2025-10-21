@@ -93,6 +93,12 @@ export const Sidebar = ({ setOpen }: SidebarProps) => {
       shortcut: "⇧S",
       icon: <FadersHorizontalIcon />,
     },
+    {
+      path: "/dashboard/hr",
+      name: t`HR`,
+      shortcut: "⇧H",
+      icon: <FadersHorizontalIcon />,
+    },
   ];
 
   return (
