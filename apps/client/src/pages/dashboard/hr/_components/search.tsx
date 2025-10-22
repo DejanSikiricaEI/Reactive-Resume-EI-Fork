@@ -46,7 +46,6 @@ export const HRSearch = () => {
     queryKey: ["hr-search", searchTrigger],
     queryFn: fetchHR,
     enabled: searchTrigger > 0,
-    keepPreviousData: true,
   });
 
   function handleChange(e: ChangeEvent<HTMLInputElement>) {
