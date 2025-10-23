@@ -30,7 +30,6 @@ export const HRSearch = () => {
     };
   }, []);
 
-  // Query function reads the latest `filters` when triggered.
   const fetchHR = async () => {
     const res = await axios.get<HRResult[]>("/hr/search", {
       params: {
@@ -42,7 +41,6 @@ export const HRSearch = () => {
   };
 
   const { data: results, isFetching } = useQuery({
-    // only depend on the trigger so typing (filters changes) doesn't auto-refetch
     queryKey: ["hr-search", searchTrigger],
     queryFn: fetchHR,
     enabled: searchTrigger > 0,
@@ -54,7 +52,6 @@ export const HRSearch = () => {
     setFilters((prev) => ({ ...prev, [name]: value }));
   }
 
-  // debounce: watch filters and trigger searchTrigger after DELAY of inactivity
   useEffect(() => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -85,7 +82,12 @@ export const HRSearch = () => {
         onChange={handleChange}
       />
 
-      <Input name="skill" placeholder={t`Skill..`} value={filters.skill} onChange={handleChange} />
+      <Input
+        name="skill"
+        placeholder={t`Enter skills, separated by commas`}
+        value={filters.skill}
+        onChange={handleChange}
+      />
 
       {isFetching && <div className="text-sm opacity-70">{t`Searching...`}</div>}
 
