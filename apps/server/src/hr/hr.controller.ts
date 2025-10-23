@@ -1,10 +1,11 @@
-import { Controller, Get, Param, Query } from "@nestjs/common";
+import { Controller, Get, Logger, Param, Query } from "@nestjs/common";
 import { PrismaService } from "nestjs-prisma";
 
 import { ResumeService } from "@/server/resume/resume.service";
 
 @Controller("hr")
 export class HRController {
+  private readonly logger = new Logger(HRController.name);
   constructor(
     private readonly prisma: PrismaService,
     private readonly resumeService: ResumeService,
@@ -46,13 +47,12 @@ export class HRController {
     }
 
     if (skill) {
-      // Split, trim each token and filter out empty/whitespace-only entries
       const skills = skill
         .split(",")
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
 
-      type QueryResult = { id: string; name: string | null; email: string | null }[];
+  type QueryResult = { userId: string; name: string | null; email: string | null }[];
       const client = this.prisma as unknown as {
         $queryRaw: (
           query: TemplateStringsArray | string,
@@ -65,7 +65,7 @@ export class HRController {
         const pattern = `%${escaped}%`;
 
         const results = await client.$queryRaw`
-        SELECT r.id,
+        SELECT r."userId" as "userId",
           COALESCE(r.data->'basics'->>'name', '') as name,
           (r.data->'basics'->>'email') as email
         FROM "Resume" r
@@ -85,7 +85,7 @@ export class HRController {
           if (email) seenEmails.add(email);
 
           returnArray.push({
-            id: r.id,
+            id: r.userId,
             name: r.name?.trim() ?? "",
             email,
           });
@@ -98,6 +98,7 @@ export class HRController {
 
   @Get("resumes/:userId")
   async resumes(@Param("userId") userId: string) {
-    return this.resumeService.findAll(userId);
+    const resumes = await this.resumeService.findAll(userId);
+    return resumes;
   }
 }
