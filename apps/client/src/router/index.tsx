@@ -16,6 +16,7 @@ import { ResumesPage } from "../pages/dashboard/resumes/page";
 import { SettingsPage } from "../pages/dashboard/settings/page";
 import { HomeLayout } from "../pages/home/layout";
 import { HomePage } from "../pages/home/page";
+import { HRResumePage } from "../pages/hr/resume/page";
 import { ErrorPage } from "../pages/public/error";
 import { publicLoader, PublicResumePage } from "../pages/public/page";
 import { Providers } from "../providers";
@@ -70,6 +71,13 @@ export const routes = createRoutesFromElements(
 
             <Route index element={<Navigate replace to="/dashboard/resumes" />} />
           </Route>
+        </Route>
+      </Route>
+
+      {/* HR resume viewer (opened by HR search results) */}
+      <Route path="hr">
+        <Route path="resume">
+          <Route path=":id" element={<HRResumePage />} />
         </Route>
       </Route>
 

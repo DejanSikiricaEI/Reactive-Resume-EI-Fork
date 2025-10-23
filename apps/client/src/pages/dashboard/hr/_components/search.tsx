@@ -96,8 +96,15 @@ export const HRSearch = () => {
           {results && results.length > 0 ? (
             results.map((r) => (
               <li key={r.id} className="px-4 py-2">
-                <div className="font-medium">{r.name ?? r.id}</div>
-                {r.email && <div className="text-sm opacity-70">{r.email}</div>}
+                <a
+                  href={`/hr/resume/${r.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  <div className="font-medium">{r.name ?? r.id}</div>
+                  {r.email && <div className="text-sm opacity-70">{r.email}</div>}
+                </a>
               </li>
             ))
           ) : (
