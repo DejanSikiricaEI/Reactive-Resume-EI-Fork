@@ -10,6 +10,8 @@ type BadgeInputProps = Omit<InputProps, "value" | "onChange"> & {
   setPendingKeyword?: Dispatch<SetStateAction<string>>;
 };
 
+const SUGGESTIONS = [".NET", "python", "C#", "javascript", "html"];
+
 export const BadgeInput = forwardRef<HTMLInputElement, BadgeInputProps>(
   ({ value, onChange, setPendingKeyword, ...props }, ref) => {
     const [label, setLabel] = useState("");
@@ -43,16 +45,50 @@ export const BadgeInput = forwardRef<HTMLInputElement, BadgeInputProps>(
       }
     };
 
+    const filteredSuggestions = label
+      ? SUGGESTIONS.filter(
+          (s) => s.toLowerCase().includes(label.trim().toLowerCase()) && !value.includes(s),
+        )
+      : [];
+
+    const handleSuggestionClick = (suggestion: string) => {
+      if (!value.includes(suggestion)) {
+        onChange([...new Set([...value, suggestion])]);
+      }
+      setLabel("");
+    };
+
     return (
-      <Input
-        {...props}
-        ref={ref}
-        value={label}
-        onKeyDown={onKeyDown}
-        onChange={(event) => {
-          setLabel(event.target.value);
-        }}
-      />
+      <div className="relative">
+        <Input
+          {...props}
+          ref={ref}
+          value={label}
+          onKeyDown={onKeyDown}
+          onChange={(event) => {
+            setLabel(event.target.value);
+          }}
+        />
+
+        {filteredSuggestions.length > 0 && (
+          <ul className="absolute inset-x-0 z-50 mt-1 max-h-48 overflow-auto rounded border bg-white shadow">
+            {filteredSuggestions.map((s) => (
+              <li
+                key={s}
+                className="cursor-pointer px-3 py-2 hover:bg-gray-100"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                }}
+                onClick={() => {
+                  handleSuggestionClick(s);
+                }}
+              >
+                {s}
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     );
   },
 );
