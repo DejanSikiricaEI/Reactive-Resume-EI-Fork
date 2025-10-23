@@ -374,6 +374,8 @@ export class KeywordsController {
     "Unreal Engine",
     "Game Development",
     "3D",
+    "Figma",
+    "Sketch",
   ];
 
   @Get()
