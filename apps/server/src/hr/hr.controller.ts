@@ -52,7 +52,7 @@ export class HRController {
         .map((s) => s.trim())
         .filter((s) => s.length > 0);
 
-  type QueryResult = { userId: string; name: string | null; email: string | null }[];
+      type QueryResult = { userId: string; name: string | null; email: string | null }[];
       const client = this.prisma as unknown as {
         $queryRaw: (
           query: TemplateStringsArray | string,
