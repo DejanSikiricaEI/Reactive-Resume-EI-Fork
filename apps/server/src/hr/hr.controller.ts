@@ -1,9 +1,14 @@
-import { Controller, Get, Query } from "@nestjs/common";
+import { Controller, Get, Param, Query } from "@nestjs/common";
 import { PrismaService } from "nestjs-prisma";
+
+import { ResumeService } from "@/server/resume/resume.service";
 
 @Controller("hr")
 export class HRController {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly resumeService: ResumeService,
+  ) {}
 
   @Get("search")
   async search(@Query("person") person?: string, @Query("skill") skill?: string) {
@@ -89,5 +94,10 @@ export class HRController {
     }
 
     return returnArray;
+  }
+
+  @Get("resumes/:userId")
+  async resumes(@Param("userId") userId: string) {
+    return this.resumeService.findAll(userId);
   }
 }
