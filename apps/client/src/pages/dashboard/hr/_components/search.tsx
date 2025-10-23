@@ -3,6 +3,7 @@ import { Input } from "@reactive-resume/ui";
 import { useQuery } from "@tanstack/react-query";
 import type { ChangeEvent } from "react";
 import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router";
 
 import { axios } from "@/client/libs/axios";
 
@@ -96,15 +97,10 @@ export const HRSearch = () => {
           {results && results.length > 0 ? (
             results.map((r) => (
               <li key={r.id} className="px-4 py-2">
-                <a
-                  href={`/hr/resume/${r.id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block"
-                >
+                <Link to={`/hr/resume/${r.id}`} className="block">
                   <div className="font-medium">{r.name ?? r.id}</div>
                   {r.email && <div className="text-sm opacity-70">{r.email}</div>}
-                </a>
+                </Link>
               </li>
             ))
           ) : (
