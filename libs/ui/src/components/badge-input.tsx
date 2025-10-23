@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 import { forwardRef, useCallback, useEffect, useState } from "react";
 
+import { fetchKeywords } from "../lib/keywords";
 import type { InputProps } from "./input";
 import { Input } from "./input";
 
@@ -10,11 +11,21 @@ type BadgeInputProps = Omit<InputProps, "value" | "onChange"> & {
   setPendingKeyword?: Dispatch<SetStateAction<string>>;
 };
 
-const SUGGESTIONS = [".NET", "python", "C#", "javascript", "html"];
-
 export const BadgeInput = forwardRef<HTMLInputElement, BadgeInputProps>(
   ({ value, onChange, setPendingKeyword, ...props }, ref) => {
     const [label, setLabel] = useState("");
+
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+
+    useEffect(() => {
+      fetchKeywords()
+        .then((res) => {
+          setSuggestions(res);
+        })
+        .catch(() => {
+          setSuggestions([]);
+        });
+    }, []);
 
     const processInput = useCallback(() => {
       const newLabels = label
@@ -46,7 +57,7 @@ export const BadgeInput = forwardRef<HTMLInputElement, BadgeInputProps>(
     };
 
     const filteredSuggestions = label
-      ? SUGGESTIONS.filter(
+      ? suggestions.filter(
           (s) => s.toLowerCase().includes(label.trim().toLowerCase()) && !value.includes(s),
         )
       : [];

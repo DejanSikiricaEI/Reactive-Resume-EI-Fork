@@ -13,6 +13,7 @@ import { DatabaseModule } from "./database/database.module";
 import { FeatureModule } from "./feature/feature.module";
 import { HealthModule } from "./health/health.module";
 import { HRModule } from "./hr/hr.module";
+import { KeywordsModule } from "./keywords/keywords.module";
 import { MailModule } from "./mail/mail.module";
 import { PrinterModule } from "./printer/printer.module";
 import { ResumeModule } from "./resume/resume.module";
@@ -39,6 +40,7 @@ import { UserModule } from "./user/user.module";
     FeatureModule,
     TranslationModule,
     ContributorsModule,
+    KeywordsModule,
 
     // Static Assets
     ServeStaticModule.forRoot({
