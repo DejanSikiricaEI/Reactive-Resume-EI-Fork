@@ -7,7 +7,11 @@ export class HRController {
 
   @Get("search")
   async search(@Query("person") person?: string, @Query("skill") skill?: string) {
-    if (!person && !skill) return [];
+    type ReturnItem = { id: string; name: string; email: string | null };
+    const returnArray: ReturnItem[] = [];
+    const seenEmails = new Set<string>();
+
+    if (!person && !skill) return returnArray;
 
     if (person) {
       const q = person.trim();
@@ -23,17 +27,25 @@ export class HRController {
         take: 250,
       });
 
-      return users.map((u) => ({
-        id: u.id,
-        name: [u.name, u.username].filter(Boolean).join(" "),
-        email: u.email,
-      }));
+      for (const u of users) {
+        const email = u.email;
+        if (email && seenEmails.has(email)) continue;
+        if (email) seenEmails.add(email);
+
+        returnArray.push({
+          id: u.id,
+          name: [u.name, u.username].filter(Boolean).join(" "),
+          email,
+        });
+      }
     }
 
     if (skill) {
-      const s = skill.trim();
-      const escaped = s.replace(/%/g, String.raw`\%`).replace(/_/g, String.raw`\_`);
-      const pattern = `%${escaped}%`;
+      // Split, trim each token and filter out empty/whitespace-only entries
+      const skills = skill
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
 
       type QueryResult = { id: string; name: string | null; email: string | null }[];
       const client = this.prisma as unknown as {
@@ -43,7 +55,11 @@ export class HRController {
         ) => Promise<QueryResult>;
       };
 
-      const results = await client.$queryRaw`
+      for (const s of skills) {
+        const escaped = s.replace(/%/g, String.raw`\%`).replace(/_/g, String.raw`\_`);
+        const pattern = `%${escaped}%`;
+
+        const results = await client.$queryRaw`
         SELECT r.id,
           COALESCE(r.data->'basics'->>'name', '') as name,
           (r.data->'basics'->>'email') as email
@@ -58,13 +74,20 @@ export class HRController {
         LIMIT 250
       `;
 
-      return results.map((r) => ({
-        id: r.id,
-        name: r.name?.trim() ?? "",
-        email: r.email ?? null,
-      }));
+        for (const r of results) {
+          const email = r.email ?? null;
+          if (email && seenEmails.has(email)) continue;
+          if (email) seenEmails.add(email);
+
+          returnArray.push({
+            id: r.id,
+            name: r.name?.trim() ?? "",
+            email,
+          });
+        }
+      }
     }
 
-    return [];
+    return returnArray;
   }
 }
