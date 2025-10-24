@@ -48,6 +48,7 @@ export const HRResumeList = ({ resumes, isLoading, error, className, children }:
   };
 
   const exportResume = (r: ResumeDto) => {
+    // Keep backwards-compatible JSON export (used as fallback and for "Export JSON")
     const id = r.id;
     const originalData = (r as unknown as { data?: ResumeData }).data ?? {};
     const maybeSections = (originalData as unknown as { sections?: unknown }).sections;
@@ -85,6 +86,98 @@ export const HRResumeList = ({ resumes, isLoading, error, className, children }:
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+  };
+
+  // Generate a .docx from a template (client-side) using PizZip + Docxtemplater.
+  // Template should be available at /templates/docx/template.docx (place it in apps/client/public/templates/docx/)
+  const exportDocx = async (r: ResumeDto) => {
+    const id = r.id;
+    const originalData = (r as unknown as { data?: ResumeData }).data ?? {};
+    const maybeSections = (originalData as unknown as { sections?: unknown }).sections;
+    let sections: ResumeData = {};
+    if (typeof maybeSections === "object" && maybeSections !== null) {
+      sections = maybeSections as ResumeData;
+    }
+
+    if (editBuffers[id]) {
+      try {
+        const parsed = JSON.parse(editBuffers[id]);
+        if (typeof parsed === "object" && parsed !== null) {
+          sections = parsed as ResumeData;
+        }
+      } catch {
+        // parse failed — we'll still try with original sections
+      }
+    }
+
+    const exported = {
+      ...originalData,
+      sections,
+    };
+
+    try {
+      const templateUrls = ["/templates/docx/template.docx", "/template.docx"];
+
+      let templateArrayBuffer: ArrayBuffer | null = null;
+      for (const url of templateUrls) {
+        try {
+          const res = await fetch(url);
+          if (!res.ok) continue;
+          templateArrayBuffer = await res.arrayBuffer();
+          break;
+        } catch {
+          // try next
+        }
+      }
+
+      if (!templateArrayBuffer) {
+        // fallback to exporting JSON if template not found
+        exportResume(r);
+        return;
+      }
+
+      const PizZipModule = await import("pizzip");
+      const DocxtemplaterModule = await import("docxtemplater");
+      // Some bundlers expose default export, handle both cases
+      const PizZip = PizZipModule.default ?? PizZipModule;
+      const Docxtemplater = DocxtemplaterModule.default ?? DocxtemplaterModule;
+
+      const zip = new PizZip(templateArrayBuffer);
+      const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+
+      // Provide exported data to template. Template tags can reference properties like {{title}} or nested ones like {{sections.contact.email}}
+      doc.setData(exported as Record<string, unknown>);
+
+      try {
+        doc.render();
+      } catch (error_) {
+        // rendering failed — fallback to JSON export
+        // eslint-disable-next-line no-console
+        console.error("Docx rendering error:", error_);
+        exportResume(r);
+        return;
+      }
+
+      const outBlob = doc.getZip().generate({
+        type: "blob",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+      const outUrl = URL.createObjectURL(outBlob);
+      const a = document.createElement("a");
+      const safeTitle = encodeURIComponent(r.title || "resume").replace(/%/g, "_");
+      const fileName = `${safeTitle}-${id}.docx`;
+      a.href = outUrl;
+      a.download = fileName;
+      document.body.append(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(outUrl);
+    } catch (error_) {
+      // on any error, fallback to JSON export
+      // eslint-disable-next-line no-console
+      console.error(error_);
+      exportResume(r);
+    }
   };
   return (
     <div className={className}>
@@ -132,7 +225,7 @@ export const HRResumeList = ({ resumes, isLoading, error, className, children }:
                       type="button"
                       className="rounded bg-gray-100 px-3 py-1 text-sm"
                       onClick={() => {
-                        exportResume(r);
+                        void exportDocx(r);
                       }}
                     >
                       {t`Export`}
