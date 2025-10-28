@@ -81,12 +81,12 @@ export const InterestsDialog = () => {
           render={({ field }) => (
             <div className="col-span-2 space-y-3">
               <FormItem>
-                <FormLabel>{t`Keywords`}</FormLabel>
+                <FormLabel>{t`Technologies`}</FormLabel>
                 <FormControl>
                   <BadgeInput {...field} setPendingKeyword={setPendingKeyword} />
                 </FormControl>
                 <FormDescription>
-                  {t`You can add multiple keywords by separating them with a comma or pressing enter.`}
+                  {t`You can add multiple technologies by separating them with a comma or pressing enter.`}
                 </FormDescription>
                 <FormMessage />
               </FormItem>

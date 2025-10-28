@@ -156,12 +156,12 @@ export const ProjectsDialog = () => {
           render={({ field }) => (
             <div className="space-y-3 sm:col-span-2">
               <FormItem>
-                <FormLabel>{t`Keywords`}</FormLabel>
+                <FormLabel>{t`Technologies`}</FormLabel>
                 <FormControl>
                   <BadgeInput {...field} setPendingKeyword={setPendingKeyword} />
                 </FormControl>
                 <FormDescription>
-                  {t`You can add multiple keywords by separating them with a comma or pressing enter.`}
+                  {t`You can add multiple technologies by separating them with a comma or pressing enter.`}
                 </FormDescription>
                 <FormMessage />
               </FormItem>
