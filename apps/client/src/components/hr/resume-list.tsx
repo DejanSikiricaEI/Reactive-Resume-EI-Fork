@@ -145,8 +145,46 @@ export const HRResumeList = ({ resumes, isLoading, error, className, children }:
       const zip = new PizZip(templateArrayBuffer);
       const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
-      // Provide exported data to template. Template tags can reference properties like {{title}} or nested ones like {{sections.contact.email}}
-      doc.setData(exported as Record<string, unknown>);
+      // Provide exported data to template. Template tags can reference properties like {{title}} or nested ones like {{sections.contact.email}}.
+      // Many templates reference top-level keys (e.g. {{skills}}) instead of nested ones ({{sections.skills}}).
+      // To be compatible with either style, merge `sections` into the top-level data when it's an object.
+      const templateData: Record<string, unknown> = { ...(exported as Record<string, unknown>) };
+      // Safely access `sections` without using `any` to satisfy lint/type checks
+      const maybeSections = (exported as unknown as { sections?: unknown }).sections;
+      if (typeof maybeSections === "object" && maybeSections !== null) {
+        Object.assign(templateData, maybeSections as Record<string, unknown>);
+      }
+
+      // Ask user whether they want a debug JSON of the template data. This helps inspect runtime data
+      // without adding permanent UI. If the user confirms, trigger a download of the JSON.
+      try {
+        // Use a window.confirm prompt so it's available in all browsers/environments this app runs in.
+        // This is intentionally lightweight — change or remove if you prefer an opt-in during development only.
+        // eslint-disable-next-line no-alert
+        if (
+          typeof window !== "undefined" &&
+          window.confirm(t`Download debug JSON of the .docx template data?`)
+        ) {
+          const debugBlob = new Blob([JSON.stringify(templateData, null, 2)], {
+            type: "application/json",
+          });
+          const debugUrl = URL.createObjectURL(debugBlob);
+          const da = document.createElement("a");
+          const safeTitle = encodeURIComponent(r.title || "resume").replace(/%/g, "_");
+          da.href = debugUrl;
+          da.download = `${safeTitle}-${id}-docx-data.json`;
+          document.body.append(da);
+          da.click();
+          da.remove();
+          URL.revokeObjectURL(debugUrl);
+        }
+      } catch (error_) {
+        // ignore any errors during debug download
+        // eslint-disable-next-line no-console
+        console.error(t`Debug JSON export failed:`, error_);
+      }
+
+      doc.setData(templateData);
 
       try {
         doc.render();
