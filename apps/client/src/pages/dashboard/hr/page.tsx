@@ -1,11 +1,25 @@
 import { t } from "@lingui/macro";
 import { ScrollArea, Separator } from "@reactive-resume/ui";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
+import { useNavigate } from "react-router";
+
+import { useUser } from "@/client/services/user";
 
 import { HRSearch } from "./_components/search";
 
 export const HRPage = () => {
+  const { user } = useUser();
+  const navigate = useNavigate();
+
+  // Redirect non-HR and non-ADMIN users away from this page
+  useEffect(() => {
+    if (!user) return; // let auth flow handle unauthenticated state
+    if (user.role !== "HR" && user.role !== "ADMIN") {
+      void navigate("/dashboard");
+    }
+  }, [user, navigate]);
   return (
     <>
       <Helmet>

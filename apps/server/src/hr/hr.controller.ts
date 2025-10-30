@@ -1,9 +1,14 @@
-import { Controller, Get, Logger, Param, Query } from "@nestjs/common";
+import { Controller, Get, Logger, Param, Query, UseGuards } from "@nestjs/common";
 import { PrismaService } from "nestjs-prisma";
 
+import { Roles } from "@/server/auth/decorators/roles.decorator";
+import { JwtGuard } from "@/server/auth/guards/jwt.guard";
+import { RolesGuard } from "@/server/auth/guards/roles.guard";
 import { ResumeService } from "@/server/resume/resume.service";
 
 @Controller("hr")
+@UseGuards(JwtGuard, RolesGuard)
+@Roles("HR", "ADMIN")
 export class HRController {
   private readonly logger = new Logger(HRController.name);
   constructor(
