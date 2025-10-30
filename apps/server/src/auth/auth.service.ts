@@ -18,7 +18,7 @@ import { authenticator } from "otplib";
 import { Config } from "../config/schema";
 import { MailService } from "../mail/mail.service";
 import { UserService } from "../user/user.service";
-import { Payload } from "./utils/payload";
+import { Payload, payloadSchema } from "./utils/payload";
 
 @Injectable()
 export class AuthService {
@@ -98,6 +98,24 @@ export class AuthService {
     if (payload.isTwoFactorAuth) return user;
   }
 
+  /**
+   * Helper to create access & refresh tokens for a user including role information
+   */
+  async createTokensForUser(id: string, email: string, isTwoFactorAuth = false) {
+    const user = await this.userService.findOneById(id);
+
+    const role = user.role ?? "USER";
+    const parsedPayload = payloadSchema.parse({ id, isTwoFactorAuth, role });
+
+    const accessToken = this.generateToken("access", parsedPayload);
+    const refreshToken = this.generateToken("refresh", parsedPayload);
+
+    // persist refresh token and update lastSignedIn
+    await this.setRefreshToken(email, refreshToken);
+
+    return { accessToken, refreshToken };
+  }
+
   async register(registerDto: RegisterDto): Promise<UserWithSecrets> {
     const hashedPassword = await this.hash(registerDto.password);
 
@@ -108,7 +126,7 @@ export class AuthService {
         username: registerDto.username,
         locale: registerDto.locale,
         provider: "email",
-        emailVerified: false, // Set to true if you don't want to verify user's email
+        emailVerified: true,
         secrets: { create: { password: hashedPassword } },
       });
 
