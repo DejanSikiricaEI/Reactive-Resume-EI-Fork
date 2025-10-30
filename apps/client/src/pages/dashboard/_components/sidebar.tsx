@@ -100,6 +100,13 @@ export const Sidebar = ({ setOpen }: SidebarProps) => {
       icon: <FadersHorizontalIcon />,
     },
   ];
+  const visibleItems = sidebarItems.filter((item) => {
+    if (item.path === "/dashboard/hr") {
+      return user?.role === "HR" || user?.role === "ADMIN";
+    }
+
+    return true;
+  });
 
   return (
     <div className="flex h-full flex-col gap-y-4">
@@ -114,7 +121,7 @@ export const Sidebar = ({ setOpen }: SidebarProps) => {
       <Separator className="opacity-50" />
 
       <div className="grid gap-y-2">
-        {sidebarItems.map((item) => (
+        {visibleItems.map((item) => (
           <SidebarItem {...item} key={item.path} onClick={() => setOpen?.(false)} />
         ))}
       </div>

@@ -17,6 +17,7 @@ export const usernameSchema = z
 export const userSchema = z.object({
   id: idSchema,
   name: z.string().min(1).max(255),
+  role: z.enum(["USER", "HR", "ADMIN"]).default("USER"),
   picture: z.literal("").or(z.null()).or(z.string().url()),
   username: usernameSchema,
   email: z

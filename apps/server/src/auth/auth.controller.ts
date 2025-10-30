@@ -39,7 +39,6 @@ import { OpenIDGuard } from "./guards/openid.guard";
 import { RefreshGuard } from "./guards/refresh.guard";
 import { TwoFactorGuard } from "./guards/two-factor.guard";
 import { getCookieOptions } from "./utils/cookie";
-import { payloadSchema } from "./utils/payload";
 
 @ApiTags("Authentication")
 @Controller("auth")
@@ -51,13 +50,12 @@ export class AuthController {
 
   private async exchangeToken(id: string, email: string, isTwoFactorAuth = false) {
     try {
-      const payload = payloadSchema.parse({ id, isTwoFactorAuth });
-
-      const accessToken = this.authService.generateToken("access", payload);
-      const refreshToken = this.authService.generateToken("refresh", payload);
-
-      // Set Refresh Token in Database
-      await this.authService.setRefreshToken(email, refreshToken);
+      // Use AuthService helper to include role when creating tokens
+      const { accessToken, refreshToken } = await this.authService.createTokensForUser(
+        id,
+        email,
+        isTwoFactorAuth,
+      );
 
       return { accessToken, refreshToken };
     } catch (error) {
