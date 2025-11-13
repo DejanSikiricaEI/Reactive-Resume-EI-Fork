@@ -218,10 +218,14 @@ export const CVPreviewPage = () => {
                   {value.map((item, index) => {
                     const itemPath = `${fieldPath}[${index}]`;
                     const itemChecked = selectedFields[itemPath] || false;
+                    const isNotFirst = index > 0;
 
                     if (item && typeof item === "object" && !Array.isArray(item)) {
                       return (
                         <div key={itemPath} className="space-y-1">
+                          {isNotFirst && (
+                            <div className="my-2 border-t border-gray-200 opacity-80" />
+                          )}
                           {renderObject(item as Record<string, unknown>, itemPath, level + 1)}
                         </div>
                       );
