@@ -165,9 +165,16 @@ export const CVPreviewPage = () => {
   };
 
   const renderObject = (obj: Record<string, unknown>, path: string, level = 0) => {
+    const hiddenFields = new Set(["id", "visible", "separatelinks", "columns"]);
+
     return (
       <div className="space-y-1" style={{ marginLeft: `${level * 16}px` }}>
         {Object.entries(obj).map(([key, value]) => {
+          // Skip hidden fields
+          if (hiddenFields.has(key.toLowerCase())) {
+            return null;
+          }
+
           const fieldPath = path ? `${path}.${key}` : key;
           const isChecked = selectedFields[fieldPath] || false;
 
