@@ -204,6 +204,11 @@ export const CVPreviewPage = () => {
           }
 
           if (Array.isArray(value)) {
+            // Hide empty arrays
+            if (value.length === 0) {
+              return null;
+            }
+
             return (
               <div key={fieldPath} className="space-y-1">
                 <div className="flex items-center gap-2 py-1">
@@ -217,18 +222,7 @@ export const CVPreviewPage = () => {
                     if (item && typeof item === "object" && !Array.isArray(item)) {
                       return (
                         <div key={itemPath} className="space-y-1">
-                          <div className="flex items-center gap-2 py-1">
-                            <input
-                              type="checkbox"
-                              checked={itemChecked}
-                              className="size-4 cursor-pointer"
-                              onChange={() => {
-                                toggleField(itemPath);
-                              }}
-                            />
-                            <span className="text-sm opacity-70">[{index}]</span>
-                          </div>
-                          {renderObject(item as Record<string, unknown>, itemPath, level + 2)}
+                          {renderObject(item as Record<string, unknown>, itemPath, level + 1)}
                         </div>
                       );
                     }
@@ -236,23 +230,9 @@ export const CVPreviewPage = () => {
                     if (Array.isArray(item)) {
                       return (
                         <div key={itemPath} className="space-y-1">
-                          <div className="flex items-center gap-2 py-1">
-                            <input
-                              type="checkbox"
-                              checked={itemChecked}
-                              className="size-4 cursor-pointer"
-                              onChange={() => {
-                                toggleField(itemPath);
-                              }}
-                            />
-                            <span className="text-sm opacity-70">
-                              [{index}]{" "}
-                              <span className="text-xs opacity-50">({item.length} items)</span>
-                            </span>
-                          </div>
                           <div
                             className="space-y-1"
-                            style={{ marginLeft: `${(level + 2) * 16}px` }}
+                            style={{ marginLeft: `${(level + 1) * 16}px` }}
                           >
                             {item.map((subItem, subIndex) => {
                               const subPath = `${itemPath}[${subIndex}]`;
@@ -267,7 +247,6 @@ export const CVPreviewPage = () => {
                                     }}
                                   />
                                   <span className="text-sm opacity-70">
-                                    [{subIndex}]:{" "}
                                     <span className="font-mono text-xs">{String(subItem)}</span>
                                   </span>
                                 </div>
@@ -289,7 +268,7 @@ export const CVPreviewPage = () => {
                           }}
                         />
                         <span className="text-sm opacity-70">
-                          [{index}]: <span className="font-mono text-xs">{String(item)}</span>
+                          <span className="font-mono text-xs">{String(item)}</span>
                         </span>
                       </div>
                     );
