@@ -106,4 +106,10 @@ export class HRController {
     const resumes = await this.resumeService.findAll(userId);
     return resumes;
   }
+
+  @Get("resume/:resumeId")
+  async resume(@Param("resumeId") resumeId: string) {
+    const resume = await this.resumeService.findOne(resumeId);
+    return resume;
+  }
 }

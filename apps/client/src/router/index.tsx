@@ -16,6 +16,7 @@ import { ResumesPage } from "../pages/dashboard/resumes/page";
 import { SettingsPage } from "../pages/dashboard/settings/page";
 import { HomeLayout } from "../pages/home/layout";
 import { HomePage } from "../pages/home/page";
+import { CVPreviewPage } from "../pages/hr/cv-preview/page";
 import { HRResumePage } from "../pages/hr/resume/page";
 import { ErrorPage } from "../pages/public/error";
 import { publicLoader, PublicResumePage } from "../pages/public/page";
@@ -78,6 +79,9 @@ export const routes = createRoutesFromElements(
       <Route path="hr">
         <Route path="resume">
           <Route path=":id" element={<HRResumePage />} />
+        </Route>
+        <Route path="cv-preview">
+          <Route path=":id" element={<CVPreviewPage />} />
         </Route>
       </Route>
 

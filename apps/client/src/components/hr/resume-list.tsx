@@ -2,6 +2,7 @@ import { t } from "@lingui/macro";
 import type { ResumeDto } from "@reactive-resume/dto";
 import type { ReactNode } from "react";
 import React, { useState } from "react";
+import { useNavigate } from "react-router";
 
 type Props = {
   resumes?: ResumeDto[] | null;
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export const HRResumeList = ({ resumes, isLoading, error, className, children }: Props) => {
+  const navigate = useNavigate();
   const [openId, setOpenId] = useState<string | null>(null);
   const [editBuffers, setEditBuffers] = useState<Record<string, string>>({});
   const [parseErrors, setParseErrors] = useState<Record<string, string>>({});
@@ -250,6 +252,15 @@ export const HRResumeList = ({ resumes, isLoading, error, className, children }:
                     </div>
                   </div>
                   <div className="flex gap-2">
+                    <button
+                      type="button"
+                      className="rounded bg-gray-100 px-3 py-1 text-sm"
+                      onClick={() => {
+                        navigate(`/hr/cv-preview/${id}`);
+                      }}
+                    >
+                      {t`CV Preview`}
+                    </button>
                     <button
                       type="button"
                       className="rounded bg-gray-100 px-3 py-1 text-sm"
