@@ -12,6 +12,11 @@ import { axios } from "@/client/libs/axios";
 
 import { Sidebar } from "../../dashboard/_components/sidebar";
 
+const getDisplayLabel = (key: string): string => {
+  if (key.toLowerCase() === "keywords") return t`Technologies`;
+  return key;
+};
+
 const fetchResume = async (id: string) => {
   const res = await axios.get<ResumeDto>(`/hr/resume/${id}`);
   return res.data;
@@ -177,6 +182,7 @@ export const CVPreviewPage = () => {
 
           const fieldPath = path ? `${path}.${key}` : key;
           const isChecked = selectedFields[fieldPath] || false;
+          const displayLabel = getDisplayLabel(key);
 
           if (value && typeof value === "object" && !Array.isArray(value)) {
             return (
@@ -190,7 +196,7 @@ export const CVPreviewPage = () => {
                       toggleField(fieldPath);
                     }}
                   />
-                  <span className="text-sm font-medium">{key}</span>
+                  <span className="text-sm font-medium">{displayLabel}</span>
                 </div>
                 {renderObject(value as Record<string, unknown>, fieldPath, level + 1)}
               </div>
@@ -201,17 +207,7 @@ export const CVPreviewPage = () => {
             return (
               <div key={fieldPath} className="space-y-1">
                 <div className="flex items-center gap-2 py-1">
-                  <input
-                    type="checkbox"
-                    checked={isChecked}
-                    className="size-4 cursor-pointer"
-                    onChange={() => {
-                      toggleField(fieldPath);
-                    }}
-                  />
-                  <span className="text-sm font-medium">
-                    {key} <span className="text-xs opacity-50">({value.length} items)</span>
-                  </span>
+                  <span className="text-sm font-medium">{displayLabel}</span>
                 </div>
                 <div className="space-y-2" style={{ marginLeft: `${(level + 1) * 16}px` }}>
                   {value.map((item, index) => {
@@ -314,7 +310,7 @@ export const CVPreviewPage = () => {
                 }}
               />
               <span className="text-sm">
-                <span className="opacity-70">{key}:</span>{" "}
+                <span className="opacity-70">{displayLabel}:</span>{" "}
                 <span className="font-mono text-xs">
                   {typeof value === "string" && value.length > 50
                     ? `${value.slice(0, 50)}...`
