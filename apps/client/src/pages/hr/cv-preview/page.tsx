@@ -68,28 +68,87 @@ export const CVPreviewPage = () => {
     if (!resume?.data) return;
 
     const result: Record<string, unknown> = {};
+    const arrayIndexRegex = /^(.+)\[(\d+)]$/;
+
+    const setValue = (obj: Record<string, unknown>, pathParts: string[], value: unknown) => {
+      let current: Record<string, unknown> | unknown[] = obj;
+
+      for (let i = 0; i < pathParts.length - 1; i++) {
+        const part = pathParts[i];
+        const arrayMatch = arrayIndexRegex.exec(part);
+
+        if (arrayMatch) {
+          const key = arrayMatch[1];
+          const index = Number.parseInt(arrayMatch[2], 10);
+
+          const currentObj = current as Record<string, unknown>;
+          currentObj[key] ??= [];
+          const arr = currentObj[key] as unknown[];
+          arr[index] ??= {};
+          current = arr[index] as Record<string, unknown> | unknown[];
+        } else {
+          const currentObj = current as Record<string, unknown>;
+          currentObj[part] ??= {};
+          current = currentObj[part] as Record<string, unknown> | unknown[];
+        }
+      }
+
+      const lastPart = pathParts.at(-1);
+      if (!lastPart) return;
+
+      const arrayMatch = arrayIndexRegex.exec(lastPart);
+
+      if (arrayMatch) {
+        const key = arrayMatch[1];
+        const index = Number.parseInt(arrayMatch[2], 10);
+        const currentObj = current as Record<string, unknown>;
+        currentObj[key] ??= [];
+        (currentObj[key] as unknown[])[index] = value;
+      } else {
+        (current as Record<string, unknown>)[lastPart] = value;
+      }
+    };
+
+    const getValue = (obj: unknown, pathParts: string[]): unknown => {
+      let current = obj;
+
+      for (const part of pathParts) {
+        const arrayMatch = arrayIndexRegex.exec(part);
+
+        if (arrayMatch) {
+          const key = arrayMatch[1];
+          const index = Number.parseInt(arrayMatch[2], 10);
+
+          if (current && typeof current === "object" && key in current) {
+            const arr = (current as Record<string, unknown>)[key];
+            if (Array.isArray(arr) && index < arr.length) {
+              current = arr[index];
+            } else {
+              return undefined;
+            }
+          } else {
+            return undefined;
+          }
+        } else {
+          if (current && typeof current === "object" && part in current) {
+            current = (current as Record<string, unknown>)[part];
+          } else {
+            return undefined;
+          }
+        }
+      }
+
+      return current;
+    };
 
     for (const path of Object.keys(selectedFields)) {
       if (!selectedFields[path]) continue;
 
       const parts = path.split(".");
-      let current: Record<string, unknown> = result;
-      let source: unknown = resume.data;
+      const value = getValue(resume.data, parts);
 
-      for (let i = 0; i < parts.length; i++) {
-        const part = parts[i];
-        
-        if (i === parts.length - 1) {
-          if (source && typeof source === "object" && part in source) {
-            current[part] = (source as Record<string, unknown>)[part];
-          }
-        } else {
-          current[part] ??= {};
-          current = current[part] as Record<string, unknown>;
-          if (source && typeof source === "object" && part in source) {
-            source = (source as Record<string, unknown>)[part];
-          }
-        }
+      if (value !== undefined) {
+        setValue(result, parts, value);
       }
     }
 
@@ -146,6 +205,92 @@ export const CVPreviewPage = () => {
                   <span className="text-sm font-medium">
                     {key} <span className="text-xs opacity-50">({value.length} items)</span>
                   </span>
+                </div>
+                <div className="space-y-2" style={{ marginLeft: `${(level + 1) * 16}px` }}>
+                  {value.map((item, index) => {
+                    const itemPath = `${fieldPath}[${index}]`;
+                    const itemChecked = selectedFields[itemPath] || false;
+
+                    if (item && typeof item === "object" && !Array.isArray(item)) {
+                      return (
+                        <div key={itemPath} className="space-y-1">
+                          <div className="flex items-center gap-2 py-1">
+                            <input
+                              type="checkbox"
+                              checked={itemChecked}
+                              className="size-4 cursor-pointer"
+                              onChange={() => {
+                                toggleField(itemPath);
+                              }}
+                            />
+                            <span className="text-sm opacity-70">[{index}]</span>
+                          </div>
+                          {renderObject(item as Record<string, unknown>, itemPath, level + 2)}
+                        </div>
+                      );
+                    }
+
+                    if (Array.isArray(item)) {
+                      return (
+                        <div key={itemPath} className="space-y-1">
+                          <div className="flex items-center gap-2 py-1">
+                            <input
+                              type="checkbox"
+                              checked={itemChecked}
+                              className="size-4 cursor-pointer"
+                              onChange={() => {
+                                toggleField(itemPath);
+                              }}
+                            />
+                            <span className="text-sm opacity-70">
+                              [{index}]{" "}
+                              <span className="text-xs opacity-50">({item.length} items)</span>
+                            </span>
+                          </div>
+                          <div
+                            className="space-y-1"
+                            style={{ marginLeft: `${(level + 2) * 16}px` }}
+                          >
+                            {item.map((subItem, subIndex) => {
+                              const subPath = `${itemPath}[${subIndex}]`;
+                              return (
+                                <div key={subPath} className="flex items-center gap-2 py-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedFields[subPath] || false}
+                                    className="size-4 cursor-pointer"
+                                    onChange={() => {
+                                      toggleField(subPath);
+                                    }}
+                                  />
+                                  <span className="text-sm opacity-70">
+                                    [{subIndex}]:{" "}
+                                    <span className="font-mono text-xs">{String(subItem)}</span>
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={itemPath} className="flex items-center gap-2 py-1">
+                        <input
+                          type="checkbox"
+                          checked={itemChecked}
+                          className="size-4 cursor-pointer"
+                          onChange={() => {
+                            toggleField(itemPath);
+                          }}
+                        />
+                        <span className="text-sm opacity-70">
+                          [{index}]: <span className="font-mono text-xs">{String(item)}</span>
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
