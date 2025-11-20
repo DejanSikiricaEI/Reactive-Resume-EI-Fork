@@ -64,7 +64,7 @@ export const HRResumePage = () => {
       // Loop through all sections dynamically (except skills, interests, and projects)
       const sections = resumes[0].data.sections;
       for (const [sectionKey, section] of Object.entries(sections)) {
-        if (sectionKey === "skills" || sectionKey === "interests" || sectionKey === "projects") continue;
+        if (sectionKey === "skills" || sectionKey === "interests") continue;
         
         if (section && typeof section === "object" && "items" in section && Array.isArray(section.items)) {
           for (const [index] of section.items.entries()) {
@@ -385,13 +385,13 @@ export const HRResumePage = () => {
 
                   {/* Dynamic Sections - Display all sections except skills, interests, and projects */}
                   {Object.entries(resumes[0].data.sections).map(([sectionKey, section]) => {
-                    if (sectionKey === "skills" || sectionKey === "interests" || sectionKey === "projects") return null;
+                    if (sectionKey === "skills" || sectionKey === "interests") return null;
                     if (!section || typeof section !== "object") return null;
 
-                    // Filter out properties we don't want to display
+                    // Filter out properties we don't want to display at section level
                     const filteredSection = Object.fromEntries(
                       Object.entries(section).filter(
-                        ([key]) => !["visible", "columns", "separateLinks", "id"].includes(key)
+                        ([key]) => !["visible", "columns", "separateLinks", "id", "name"].includes(key)
                       )
                     );
 
@@ -466,8 +466,24 @@ export const HRResumePage = () => {
                                         );
                                       }
                                       
-                                      // Handle objects
+                                      // Handle objects - flatten URL objects to just href
                                       if (typeof value === "object") {
+                                        // Check if it's a URL object with href property
+                                        if ("href" in value && typeof value.href === "string") {
+                                          return (
+                                            <div key={key} className="flex gap-2">
+                                              <span className="font-medium capitalize">{key}:</span>
+                                              <a
+                                                href={value.href}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-primary opacity-75 hover:underline"
+                                              >
+                                                {value.href}
+                                              </a>
+                                            </div>
+                                          );
+                                        }
                                         return (
                                           <div key={key} className="flex gap-2">
                                             <span className="font-medium capitalize">{key}:</span>
