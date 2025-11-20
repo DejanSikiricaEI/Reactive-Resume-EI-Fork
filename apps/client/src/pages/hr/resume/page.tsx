@@ -179,6 +179,35 @@ export const HRResumePage = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Technologies Section */}
+                  {resumes[0].data.sections.skills.items.length > 0 && (
+                    <div className="space-y-2 border-t pt-3">
+                      <span className="text-sm font-medium">{t`Technologies`}:</span>
+                      <div className="space-y-2">
+                        {resumes[0].data.sections.skills.items.map((skill, index) => {
+                          if (skill.keywords.length === 0) return null;
+                          return (
+                            <div key={index} className="flex flex-wrap gap-2">
+                              {skill.name && (
+                                <span className="text-sm font-medium">{skill.name}:</span>
+                              )}
+                              <div className="flex flex-wrap gap-1">
+                                {skill.keywords.map((keyword, kIndex) => (
+                                  <span
+                                    key={kIndex}
+                                    className="rounded-full bg-primary/10 px-2 py-0.5 text-xs"
+                                  >
+                                    {keyword}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
