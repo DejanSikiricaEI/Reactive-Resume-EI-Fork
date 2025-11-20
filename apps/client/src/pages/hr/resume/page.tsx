@@ -4,7 +4,7 @@ import type { ResumeDto } from "@reactive-resume/dto";
 import { Button, Sheet, SheetClose, SheetContent, SheetTrigger } from "@reactive-resume/ui";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useParams } from "react-router";
 
@@ -22,6 +22,7 @@ export const HRResumePage = () => {
   const params = useParams() as { id?: string };
   const id = params.id ?? "";
   const [open, setOpen] = useState(false);
+  const [selectedTechnologies, setSelectedTechnologies] = useState<Set<string>>(new Set());
 
   const {
     data: resumes,
@@ -32,6 +33,51 @@ export const HRResumePage = () => {
     queryFn: () => fetchResumesForUser(id),
     enabled: id.length > 0,
   });
+
+  // Initialize all technologies as selected when data loads
+  useEffect(() => {
+    if (resumes && resumes.length > 0 && resumes[0].data.sections.skills.items) {
+      const allKeywords = new Set<string>();
+      for (const skill of resumes[0].data.sections.skills.items) {
+        for (const keyword of skill.keywords) {
+          allKeywords.add(keyword);
+        }
+      }
+      setSelectedTechnologies(allKeywords);
+    }
+  }, [resumes]);
+
+  const toggleTechnology = (tech: string) => {
+    setSelectedTechnologies((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(tech)) {
+        newSet.delete(tech);
+      } else {
+        newSet.add(tech);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSkillGroup = (skillName: string, keywords: string[]) => {
+    setSelectedTechnologies((prev) => {
+      const newSet = new Set(prev);
+      const allSelected = keywords.every((kw) => newSet.has(kw));
+
+      if (allSelected) {
+        // Deselect all
+        for (const kw of keywords) {
+          newSet.delete(kw);
+        }
+      } else {
+        // Select all
+        for (const kw of keywords) {
+          newSet.add(kw);
+        }
+      }
+      return newSet;
+    });
+  };
 
   return (
     <>
@@ -190,16 +236,32 @@ export const HRResumePage = () => {
                           return (
                             <div key={index} className="flex flex-wrap gap-2">
                               {skill.name && (
-                                <span className="text-sm font-medium">{skill.name}:</span>
+                                <button
+                                  type="button"
+                                  className="cursor-pointer text-sm font-medium hover:text-primary"
+                                  onClick={() => {
+                                    toggleSkillGroup(skill.name, skill.keywords);
+                                  }}
+                                >
+                                  {skill.name}:
+                                </button>
                               )}
                               <div className="flex flex-wrap gap-1">
                                 {skill.keywords.map((keyword, kIndex) => (
-                                  <span
+                                  <button
                                     key={kIndex}
-                                    className="rounded-full bg-primary/10 px-2 py-0.5 text-xs"
+                                    type="button"
+                                    className={`cursor-pointer rounded-full px-2 py-0.5 text-xs transition-colors ${
+                                      selectedTechnologies.has(keyword)
+                                        ? "bg-primary text-primary-foreground"
+                                        : "bg-primary/10 hover:bg-primary/20"
+                                    }`}
+                                    onClick={() => {
+                                      toggleTechnology(keyword);
+                                    }}
                                   >
                                     {keyword}
-                                  </span>
+                                  </button>
                                 ))}
                               </div>
                             </div>
