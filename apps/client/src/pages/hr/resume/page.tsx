@@ -77,9 +77,114 @@ export const HRResumePage = () => {
         <div className="max-w-3xl space-y-4">
           <h1 className="text-2xl font-bold">{t`HR Resume`}</h1>
 
-          <p className="text-sm opacity-70">
-            {t`Viewing resumes for user`}: <strong>{id}</strong>
-          </p>
+          {/* User Profile Section */}
+          {!isFetching && resumes && resumes.length > 0 && resumes[0].data.basics && (
+            <div className="rounded-lg border-2 bg-secondary/10 p-6 shadow-sm">
+              <div className="flex items-start gap-6">
+                {/* Profile Picture */}
+                {resumes[0].data.basics.picture.url &&
+                  !resumes[0].data.basics.picture.effects.hidden && (
+                    <div className="shrink-0">
+                      <img
+                        src={resumes[0].data.basics.picture.url}
+                        alt={resumes[0].data.basics.name || t`Profile Picture`}
+                        className="rounded-lg object-cover"
+                        style={{
+                          width: `${resumes[0].data.basics.picture.size || 64}px`,
+                          height: `${resumes[0].data.basics.picture.size || 64}px`,
+                          aspectRatio: resumes[0].data.basics.picture.aspectRatio || 1,
+                          borderRadius: `${resumes[0].data.basics.picture.borderRadius || 0}%`,
+                          filter: resumes[0].data.basics.picture.effects.grayscale
+                            ? "grayscale(100%)"
+                            : "none",
+                          border: resumes[0].data.basics.picture.effects.border
+                            ? "2px solid currentColor"
+                            : "none",
+                        }}
+                      />
+                    </div>
+                  )}
+
+                {/* Profile Information */}
+                <div className="flex-1 space-y-3">
+                  {/* Name */}
+                  {resumes[0].data.basics.name && (
+                    <h2 className="text-3xl font-bold">{resumes[0].data.basics.name}</h2>
+                  )}
+
+                  {/* Headline */}
+                  {resumes[0].data.basics.headline && (
+                    <p className="opacity-75">{resumes[0].data.basics.headline}</p>
+                  )}
+
+                  {/* Contact Information */}
+                  <div className="grid grid-cols-1 gap-2 pt-2 md:grid-cols-2">
+                    {resumes[0].data.basics.email && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{t`Email`}:</span>
+                        <a
+                          href={`mailto:${resumes[0].data.basics.email}`}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          {resumes[0].data.basics.email}
+                        </a>
+                      </div>
+                    )}
+
+                    {resumes[0].data.basics.phone && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{t`Phone`}:</span>
+                        <a
+                          href={`tel:${resumes[0].data.basics.phone}`}
+                          className="text-sm text-primary hover:underline"
+                        >
+                          {resumes[0].data.basics.phone}
+                        </a>
+                      </div>
+                    )}
+
+                    {resumes[0].data.basics.location && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{t`Location`}:</span>
+                        <span className="text-sm">{resumes[0].data.basics.location}</span>
+                      </div>
+                    )}
+
+                    {resumes[0].data.basics.url.href && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium">{t`Website`}:</span>
+                        <a
+                          href={resumes[0].data.basics.url.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-sm text-primary hover:underline"
+                        >
+                          {resumes[0].data.basics.url.label || resumes[0].data.basics.url.href}
+                        </a>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Custom Fields */}
+                  {resumes[0].data.basics.customFields.length > 0 && (
+                    <div className="space-y-2 pt-2">
+                      <span className="text-sm font-medium">{t`Additional Information`}:</span>
+                      <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
+                        {resumes[0].data.basics.customFields.map((field, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <span className="text-sm font-medium">{field.name}:</span>
+                            <span className="text-sm">{field.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {isFetching && <p className="text-sm opacity-70">{t`Loading user profile...`}</p>}
 
           <HRResumeList resumes={resumes ?? []} isLoading={isFetching} error={error} />
         </div>
