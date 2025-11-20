@@ -18,8 +18,6 @@ const fetchResumesForUser = async (userId: string) => {
   return res.data;
 };
 
-
-
 export const HRResumePage = () => {
   const params = useParams() as { id?: string };
   const id = params.id ?? "";
@@ -54,7 +52,10 @@ export const HRResumePage = () => {
 
       // Interests keywords
       if (resumes[0].data.sections.interests.items.length > 0) {
-        for (const [interestIndex, interest] of resumes[0].data.sections.interests.items.entries()) {
+        for (const [
+          interestIndex,
+          interest,
+        ] of resumes[0].data.sections.interests.items.entries()) {
           for (const [keywordIndex] of interest.keywords.entries()) {
             allKeywords.add(`interest-${interestIndex}-${keywordIndex}`);
           }
@@ -65,8 +66,13 @@ export const HRResumePage = () => {
       const sections = resumes[0].data.sections;
       for (const [sectionKey, section] of Object.entries(sections)) {
         if (sectionKey === "skills" || sectionKey === "interests") continue;
-        
-        if (section && typeof section === "object" && "items" in section && Array.isArray(section.items)) {
+
+        if (
+          section &&
+          typeof section === "object" &&
+          "items" in section &&
+          Array.isArray(section.items)
+        ) {
           for (const [index] of section.items.entries()) {
             allItems.add(`${sectionKey}-${index}`);
           }
@@ -124,7 +130,10 @@ export const HRResumePage = () => {
   const toggleInterestGroup = (interestIndex: number, keywordCount: number) => {
     setSelectedTechnologies((prev) => {
       const newSet = new Set(prev);
-      const keywordIds = Array.from({ length: keywordCount }, (_, i) => `interest-${interestIndex}-${i}`);
+      const keywordIds = Array.from(
+        { length: keywordCount },
+        (_, i) => `interest-${interestIndex}-${i}`,
+      );
       const allSelected = keywordIds.every((id) => newSet.has(id));
 
       if (allSelected) {
@@ -155,10 +164,10 @@ export const HRResumePage = () => {
     // Export selected skills and their keywords
     if (resume.data.sections.skills.items.length > 0) {
       for (const [skillIndex, skill] of resume.data.sections.skills.items.entries()) {
-        const selectedKeywords = skill.keywords.filter((_, kIndex) => 
-          selectedTechnologies.has(`skill-${skillIndex}-${kIndex}`)
+        const selectedKeywords = skill.keywords.filter((_, kIndex) =>
+          selectedTechnologies.has(`skill-${skillIndex}-${kIndex}`),
         );
-        
+
         if (selectedKeywords.length > 0) {
           exportData.sections.skills.items.push({
             ...skill,
@@ -171,10 +180,10 @@ export const HRResumePage = () => {
     // Export selected interests and their keywords
     if (resume.data.sections.interests.items.length > 0) {
       for (const [interestIndex, interest] of resume.data.sections.interests.items.entries()) {
-        const selectedKeywords = interest.keywords.filter((_, kIndex) => 
-          selectedTechnologies.has(`interest-${interestIndex}-${kIndex}`)
+        const selectedKeywords = interest.keywords.filter((_, kIndex) =>
+          selectedTechnologies.has(`interest-${interestIndex}-${kIndex}`),
         );
-        
+
         if (selectedKeywords.length > 0) {
           exportData.sections.interests.items.push({
             ...interest,
@@ -188,12 +197,15 @@ export const HRResumePage = () => {
     const sections = resume.data.sections;
     for (const [sectionKey, section] of Object.entries(sections)) {
       if (sectionKey === "skills" || sectionKey === "interests") continue;
-      
-      if (section && typeof section === "object" && "items" in section && Array.isArray(section.items)) {
+
+      if (
+        section &&
+        typeof section === "object" &&
+        "items" in section &&
+        Array.isArray(section.items)
+      ) {
         exportData.sections[sectionKey] = {
-          items: section.items.filter((_, index) => 
-            selectedItems.has(`${sectionKey}-${index}`)
-          ),
+          items: section.items.filter((_, index) => selectedItems.has(`${sectionKey}-${index}`)),
         };
       }
     }
@@ -204,10 +216,10 @@ export const HRResumePage = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `resume-export-${new Date().toISOString().split('T')[0]}.json`;
-    document.body.appendChild(link);
+    link.download = `resume-export-${new Date().toISOString().split("T")[0]}.json`;
+    document.body.append(link);
     link.click();
-    document.body.removeChild(link);
+    link.remove();
     URL.revokeObjectURL(url);
   };
 
@@ -256,7 +268,7 @@ export const HRResumePage = () => {
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">{t`HR Resume`}</h1>
             {!isFetching && resumes && resumes.length > 0 && (
-              <Button onClick={exportSelectedToJSON} variant="outline">
+              <Button variant="outline" onClick={exportSelectedToJSON}>
                 {t`Export Selected to JSON`}
               </Button>
             )}
@@ -469,27 +481,34 @@ export const HRResumePage = () => {
                     // Filter out properties we don't want to display at section level
                     const filteredSection = Object.fromEntries(
                       Object.entries(section).filter(
-                        ([key]) => !["visible", "columns", "separateLinks", "id", "name"].includes(key)
-                      )
+                        ([key]) =>
+                          !["visible", "columns", "separateLinks", "id", "name"].includes(key),
+                      ),
                     );
 
                     // Check if there are items to display
-                    const hasItems = "items" in filteredSection && Array.isArray(filteredSection.items) && filteredSection.items.length > 0;
-                    
+                    const hasItems =
+                      "items" in filteredSection &&
+                      Array.isArray(filteredSection.items) &&
+                      filteredSection.items.length > 0;
+
                     // Check if there are other properties to display
-                    const otherProps = Object.entries(filteredSection).filter(([key]) => key !== "items");
-                    
+                    const otherProps = Object.entries(filteredSection).filter(
+                      ([key]) => key !== "items",
+                    );
+
                     if (!hasItems && otherProps.length === 0) return null;
 
                     return (
                       <div key={sectionKey} className="space-y-2 border-t pt-3">
                         <span className="text-sm font-medium capitalize">{sectionKey}:</span>
-                        
+
                         {/* Display non-items properties */}
                         {otherProps.length > 0 && (
                           <div className="space-y-1 text-sm">
                             {otherProps.map(([key, value]) => {
-                              if (value === null || value === undefined || value === "") return null;
+                              if (value === null || value === undefined || value === "")
+                                return null;
                               return (
                                 <div key={key} className="flex gap-2">
                                   <span className="font-medium capitalize">{key}:</span>
@@ -505,10 +524,10 @@ export const HRResumePage = () => {
                           <div className="space-y-2">
                             {filteredSection.items.map((item: any, index: number) => {
                               const uniqueId = `${sectionKey}-${index}`;
-                              
                               // Get all properties from the item except visible, columns, separateLinks, id
                               const itemProps = Object.entries(item).filter(
-                                ([key]) => !["visible", "columns", "separateLinks", "id"].includes(key)
+                                ([key]) =>
+                                  !["visible", "columns", "separateLinks", "id"].includes(key),
                               );
 
                               return (
@@ -525,8 +544,8 @@ export const HRResumePage = () => {
                                 >
                                   <div className="space-y-1 text-sm">
                                     {itemProps.map(([key, value]) => {
-                                      if (value === null || value === undefined || value === "") return null;
-                                      
+                                      if (value === null || value === undefined || value === "")
+                                        return null;
                                       // Handle arrays (like keywords)
                                       if (Array.isArray(value)) {
                                         if (value.length === 0) return null;
@@ -535,7 +554,10 @@ export const HRResumePage = () => {
                                             <span className="font-medium capitalize">{key}:</span>
                                             <div className="flex flex-wrap gap-1">
                                               {value.map((v, i) => (
-                                                <span key={i} className="rounded bg-primary/20 px-2 py-0.5 text-xs">
+                                                <span
+                                                  key={i}
+                                                  className="rounded bg-primary/20 px-2 py-0.5 text-xs"
+                                                >
                                                   {String(v)}
                                                 </span>
                                               ))}
@@ -543,7 +565,6 @@ export const HRResumePage = () => {
                                           </div>
                                         );
                                       }
-                                      
                                       // Handle objects - flatten URL objects to just href
                                       if (typeof value === "object") {
                                         // Check if it's a URL object with href property
@@ -565,18 +586,20 @@ export const HRResumePage = () => {
                                         return (
                                           <div key={key} className="flex gap-2">
                                             <span className="font-medium capitalize">{key}:</span>
-                                            <span className="opacity-75">{JSON.stringify(value)}</span>
+                                            <span className="opacity-75">
+                                              {JSON.stringify(value)}
+                                            </span>
                                           </div>
                                         );
                                       }
-                                      
+
                                       // Handle primitive values
                                       return (
                                         <div key={key} className="flex gap-2">
                                           <span className="font-medium capitalize">{key}:</span>
                                           <span className="opacity-75">
-                                            {key === "summary" 
-                                              ? String(value).replace(/<[^>]*>/g, '')
+                                            {key === "summary"
+                                              ? String(value).replace(/<[^>]*>/g, "")
                                               : String(value)}
                                           </span>
                                         </div>
