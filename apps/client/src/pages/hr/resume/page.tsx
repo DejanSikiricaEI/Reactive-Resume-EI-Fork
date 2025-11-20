@@ -18,19 +18,7 @@ const fetchResumesForUser = async (userId: string) => {
   return res.data;
 };
 
-// Section configuration for dynamic rendering
-const SECTION_CONFIG = {
-  certifications: { labelKey: "Certifications", nameField: "name" },
-  publications: { labelKey: "Publications", nameField: "name" },
-  references: { labelKey: "References", nameField: "name" },
-  languages: { labelKey: "Languages", nameField: "name" },
-  awards: { labelKey: "Awards", nameField: "title" },
-  education: { labelKey: "Education", nameField: "institution" },
-  experience: { labelKey: "Experience", nameField: "company" },
-  volunteer: { labelKey: "Volunteer", nameField: "organization" },
-  projects: { labelKey: "Projects", nameField: "name" },
-  profiles: { labelKey: "Profiles", nameField: "network" },
-} as const;
+
 
 export const HRResumePage = () => {
   const params = useParams() as { id?: string };
@@ -73,25 +61,14 @@ export const HRResumePage = () => {
         }
       }
 
-      // Loop through all other sections dynamically (except skills and interests which are handled above)
-      const sectionsToProcess = [
-        "certifications",
-        "publications",
-        "references",
-        "languages",
-        "awards",
-        "education",
-        "experience",
-        "volunteer",
-        "projects",
-        "profiles",
-      ] as const;
-
-      for (const sectionKey of sectionsToProcess) {
-        const section = resumes[0].data.sections[sectionKey];
-        if (section && section.items && section.items.length > 0) {
+      // Loop through all sections dynamically (except skills, interests, and projects)
+      const sections = resumes[0].data.sections;
+      for (const [sectionKey, section] of Object.entries(sections)) {
+        if (sectionKey === "skills" || sectionKey === "interests" || sectionKey === "projects") continue;
+        
+        if (section && typeof section === "object" && "items" in section && Array.isArray(section.items)) {
           for (const [index] of section.items.entries()) {
-            allItems.add(`${sectionKey.slice(0, -1)}-${index}`);
+            allItems.add(`${sectionKey}-${index}`);
           }
         }
       }
@@ -406,67 +383,113 @@ export const HRResumePage = () => {
                     </div>
                   )}
 
-                  {/* Languages Section */}
-                  {resumes[0].data.sections.languages.items.length > 0 && (
-                    <div className="space-y-2 border-t pt-3">
-                      <span className="text-sm font-medium">{t`Languages`}:</span>
-                      <div className="flex flex-wrap gap-1">
-                        {resumes[0].data.sections.languages.items.map((language, index) => {
-                          const uniqueId = `language-${index}`;
-                          return (
-                            <button
-                              key={index}
-                              type="button"
-                              className={`cursor-pointer rounded-full px-3 py-1 text-sm transition-colors ${
-                                selectedItems.has(uniqueId)
-                                  ? "bg-primary text-primary-foreground"
-                                  : "bg-primary/10 hover:bg-primary/20"
-                              }`}
-                              onClick={() => {
-                                toggleItem(uniqueId);
-                              }}
-                            >
-                              {language.name}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                  {/* Dynamic Sections - Display all sections except skills, interests, and projects */}
+                  {Object.entries(resumes[0].data.sections).map(([sectionKey, section]) => {
+                    if (sectionKey === "skills" || sectionKey === "interests" || sectionKey === "projects") return null;
+                    if (!section || typeof section !== "object") return null;
 
-                  {/* Dynamic Sections */}
-                  {Object.entries(SECTION_CONFIG).map(([sectionKey, config]) => {
-                    const section = resumes[0].data.sections[sectionKey as keyof typeof SECTION_CONFIG];
-                    if (!section || !section.items || section.items.length === 0) return null;
+                    // Filter out properties we don't want to display
+                    const filteredSection = Object.fromEntries(
+                      Object.entries(section).filter(
+                        ([key]) => !["visible", "columns", "separateLinks", "id"].includes(key)
+                      )
+                    );
 
-                    const singularKey = sectionKey.slice(0, -1);
+                    // Check if there are items to display
+                    const hasItems = "items" in filteredSection && Array.isArray(filteredSection.items) && filteredSection.items.length > 0;
                     
+                    // Check if there are other properties to display
+                    const otherProps = Object.entries(filteredSection).filter(([key]) => key !== "items");
+                    
+                    if (!hasItems && otherProps.length === 0) return null;
+
                     return (
                       <div key={sectionKey} className="space-y-2 border-t pt-3">
-                        <span className="text-sm font-medium">{t`${config.labelKey}`}:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {section.items.map((item: any, index: number) => {
-                            const uniqueId = `${singularKey}-${index}`;
-                            const displayName = item[config.nameField] || "";
-                            
-                            return (
-                              <button
-                                key={index}
-                                type="button"
-                                className={`cursor-pointer rounded-full px-3 py-1 text-sm transition-colors ${
-                                  selectedItems.has(uniqueId)
-                                    ? "bg-primary text-primary-foreground"
-                                    : "bg-primary/10 hover:bg-primary/20"
-                                }`}
-                                onClick={() => {
-                                  toggleItem(uniqueId);
-                                }}
-                              >
-                                {displayName}
-                              </button>
-                            );
-                          })}
-                        </div>
+                        <span className="text-sm font-medium capitalize">{sectionKey}:</span>
+                        
+                        {/* Display non-items properties */}
+                        {otherProps.length > 0 && (
+                          <div className="space-y-1 text-sm">
+                            {otherProps.map(([key, value]) => {
+                              if (value === null || value === undefined || value === "") return null;
+                              return (
+                                <div key={key} className="flex gap-2">
+                                  <span className="font-medium capitalize">{key}:</span>
+                                  <span className="opacity-75">{String(value)}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        {/* Display items if they exist */}
+                        {hasItems && (
+                          <div className="space-y-2">
+                            {filteredSection.items.map((item: any, index: number) => {
+                              const uniqueId = `${sectionKey}-${index}`;
+                              
+                              // Get all properties from the item except visible, columns, separateLinks, id
+                              const itemProps = Object.entries(item).filter(
+                                ([key]) => !["visible", "columns", "separateLinks", "id"].includes(key)
+                              );
+
+                              return (
+                                <div
+                                  key={index}
+                                  className={`cursor-pointer rounded-lg border p-3 transition-colors ${
+                                    selectedItems.has(uniqueId)
+                                      ? "border-primary bg-primary/10"
+                                      : "border-border bg-secondary/5 hover:border-primary/50"
+                                  }`}
+                                  onClick={() => {
+                                    toggleItem(uniqueId);
+                                  }}
+                                >
+                                  <div className="space-y-1 text-sm">
+                                    {itemProps.map(([key, value]) => {
+                                      if (value === null || value === undefined || value === "") return null;
+                                      
+                                      // Handle arrays (like keywords)
+                                      if (Array.isArray(value)) {
+                                        if (value.length === 0) return null;
+                                        return (
+                                          <div key={key} className="flex gap-2">
+                                            <span className="font-medium capitalize">{key}:</span>
+                                            <div className="flex flex-wrap gap-1">
+                                              {value.map((v, i) => (
+                                                <span key={i} className="rounded bg-primary/20 px-2 py-0.5 text-xs">
+                                                  {String(v)}
+                                                </span>
+                                              ))}
+                                            </div>
+                                          </div>
+                                        );
+                                      }
+                                      
+                                      // Handle objects
+                                      if (typeof value === "object") {
+                                        return (
+                                          <div key={key} className="flex gap-2">
+                                            <span className="font-medium capitalize">{key}:</span>
+                                            <span className="opacity-75">{JSON.stringify(value)}</span>
+                                          </div>
+                                        );
+                                      }
+                                      
+                                      // Handle primitive values
+                                      return (
+                                        <div key={key} className="flex gap-2">
+                                          <span className="font-medium capitalize">{key}:</span>
+                                          <span className="opacity-75">{String(value)}</span>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
