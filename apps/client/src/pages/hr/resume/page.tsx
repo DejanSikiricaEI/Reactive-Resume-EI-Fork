@@ -18,11 +18,26 @@ const fetchResumesForUser = async (userId: string) => {
   return res.data;
 };
 
+// Section configuration for dynamic rendering
+const SECTION_CONFIG = {
+  certifications: { labelKey: "Certifications", nameField: "name" },
+  publications: { labelKey: "Publications", nameField: "name" },
+  references: { labelKey: "References", nameField: "name" },
+  languages: { labelKey: "Languages", nameField: "name" },
+  awards: { labelKey: "Awards", nameField: "title" },
+  education: { labelKey: "Education", nameField: "institution" },
+  experience: { labelKey: "Experience", nameField: "company" },
+  volunteer: { labelKey: "Volunteer", nameField: "organization" },
+  projects: { labelKey: "Projects", nameField: "name" },
+  profiles: { labelKey: "Profiles", nameField: "network" },
+} as const;
+
 export const HRResumePage = () => {
   const params = useParams() as { id?: string };
   const id = params.id ?? "";
   const [open, setOpen] = useState(false);
   const [selectedTechnologies, setSelectedTechnologies] = useState<Set<string>>(new Set());
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   const {
     data: resumes,
@@ -34,16 +49,55 @@ export const HRResumePage = () => {
     enabled: id.length > 0,
   });
 
-  // Initialize all technologies as selected when data loads
+  // Initialize all technologies and items as selected when data loads
   useEffect(() => {
-    if (resumes && resumes.length > 0 && resumes[0].data.sections.skills.items) {
+    if (resumes && resumes.length > 0) {
       const allKeywords = new Set<string>();
-      for (const skill of resumes[0].data.sections.skills.items) {
-        for (const keyword of skill.keywords) {
-          allKeywords.add(keyword);
+      const allItems = new Set<string>();
+
+      // Technologies from skills
+      if (resumes[0].data.sections.skills.items.length > 0) {
+        for (const [skillIndex, skill] of resumes[0].data.sections.skills.items.entries()) {
+          for (const [keywordIndex] of skill.keywords.entries()) {
+            allKeywords.add(`skill-${skillIndex}-${keywordIndex}`);
+          }
         }
       }
+
+      // Interests keywords
+      if (resumes[0].data.sections.interests.items.length > 0) {
+        for (const [interestIndex, interest] of resumes[0].data.sections.interests.items.entries()) {
+          for (const [keywordIndex] of interest.keywords.entries()) {
+            allKeywords.add(`interest-${interestIndex}-${keywordIndex}`);
+          }
+        }
+      }
+
+      // Loop through all other sections dynamically (except skills and interests which are handled above)
+      const sectionsToProcess = [
+        "certifications",
+        "publications",
+        "references",
+        "languages",
+        "awards",
+        "education",
+        "experience",
+        "volunteer",
+        "projects",
+        "profiles",
+      ] as const;
+
+      for (const sectionKey of sectionsToProcess) {
+        const section = resumes[0].data.sections[sectionKey];
+        if (section && section.items && section.items.length > 0) {
+          for (const [index] of section.items.entries()) {
+            allItems.add(`${sectionKey.slice(0, -1)}-${index}`);
+          }
+        }
+      }
+
       setSelectedTechnologies(allKeywords);
+      setSelectedItems(allItems);
     }
   }, [resumes]);
 
@@ -59,20 +113,50 @@ export const HRResumePage = () => {
     });
   };
 
-  const toggleSkillGroup = (skillName: string, keywords: string[]) => {
+  const toggleItem = (itemId: string) => {
+    setSelectedItems((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(itemId)) {
+        newSet.delete(itemId);
+      } else {
+        newSet.add(itemId);
+      }
+      return newSet;
+    });
+  };
+
+  const toggleSkillGroup = (skillIndex: number, keywordCount: number) => {
     setSelectedTechnologies((prev) => {
       const newSet = new Set(prev);
-      const allSelected = keywords.every((kw) => newSet.has(kw));
+      const keywordIds = Array.from({ length: keywordCount }, (_, i) => `skill-${skillIndex}-${i}`);
+      const allSelected = keywordIds.every((id) => newSet.has(id));
 
       if (allSelected) {
-        // Deselect all
-        for (const kw of keywords) {
-          newSet.delete(kw);
+        for (const id of keywordIds) {
+          newSet.delete(id);
         }
       } else {
-        // Select all
-        for (const kw of keywords) {
-          newSet.add(kw);
+        for (const id of keywordIds) {
+          newSet.add(id);
+        }
+      }
+      return newSet;
+    });
+  };
+
+  const toggleInterestGroup = (interestIndex: number, keywordCount: number) => {
+    setSelectedTechnologies((prev) => {
+      const newSet = new Set(prev);
+      const keywordIds = Array.from({ length: keywordCount }, (_, i) => `interest-${interestIndex}-${i}`);
+      const allSelected = keywordIds.every((id) => newSet.has(id));
+
+      if (allSelected) {
+        for (const id of keywordIds) {
+          newSet.delete(id);
+        }
+      } else {
+        for (const id of keywordIds) {
+          newSet.add(id);
         }
       }
       return newSet;
@@ -124,7 +208,7 @@ export const HRResumePage = () => {
           <h1 className="text-2xl font-bold">{t`HR Resume`}</h1>
 
           {/* User Profile Section */}
-          {!isFetching && resumes && resumes.length > 0 && resumes[0].data.basics && (
+          {!isFetching && resumes && resumes.length > 0 && (
             <div className="rounded-lg border-2 bg-secondary/10 p-6 shadow-sm">
               <div className="flex items-start gap-6">
                 {/* Profile Picture */}
@@ -240,29 +324,32 @@ export const HRResumePage = () => {
                                   type="button"
                                   className="cursor-pointer text-sm font-medium hover:text-primary"
                                   onClick={() => {
-                                    toggleSkillGroup(skill.name, skill.keywords);
+                                    toggleSkillGroup(index, skill.keywords.length);
                                   }}
                                 >
                                   {skill.name}:
                                 </button>
                               )}
                               <div className="flex flex-wrap gap-1">
-                                {skill.keywords.map((keyword, kIndex) => (
-                                  <button
-                                    key={kIndex}
-                                    type="button"
-                                    className={`cursor-pointer rounded-full px-2 py-0.5 text-xs transition-colors ${
-                                      selectedTechnologies.has(keyword)
-                                        ? "bg-primary text-primary-foreground"
-                                        : "bg-primary/10 hover:bg-primary/20"
-                                    }`}
-                                    onClick={() => {
-                                      toggleTechnology(keyword);
-                                    }}
-                                  >
-                                    {keyword}
-                                  </button>
-                                ))}
+                                {skill.keywords.map((keyword, kIndex) => {
+                                  const uniqueId = `skill-${index}-${kIndex}`;
+                                  return (
+                                    <button
+                                      key={kIndex}
+                                      type="button"
+                                      className={`cursor-pointer rounded-full px-2 py-0.5 text-xs transition-colors ${
+                                        selectedTechnologies.has(uniqueId)
+                                          ? "bg-primary text-primary-foreground"
+                                          : "bg-primary/10 hover:bg-primary/20"
+                                      }`}
+                                      onClick={() => {
+                                        toggleTechnology(uniqueId);
+                                      }}
+                                    >
+                                      {keyword}
+                                    </button>
+                                  );
+                                })}
                               </div>
                             </div>
                           );
@@ -270,6 +357,119 @@ export const HRResumePage = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Interests Section */}
+                  {resumes[0].data.sections.interests.items.length > 0 && (
+                    <div className="space-y-2 border-t pt-3">
+                      <span className="text-sm font-medium">{t`Interests`}:</span>
+                      <div className="space-y-2">
+                        {resumes[0].data.sections.interests.items.map((interest, index) => {
+                          if (interest.keywords.length === 0) return null;
+                          return (
+                            <div key={index} className="flex flex-wrap gap-2">
+                              {interest.name && (
+                                <button
+                                  type="button"
+                                  className="cursor-pointer text-sm font-medium hover:text-primary"
+                                  onClick={() => {
+                                    toggleInterestGroup(index, interest.keywords.length);
+                                  }}
+                                >
+                                  {interest.name}:
+                                </button>
+                              )}
+                              <div className="flex flex-wrap gap-1">
+                                {interest.keywords.map((keyword, kIndex) => {
+                                  const uniqueId = `interest-${index}-${kIndex}`;
+                                  return (
+                                    <button
+                                      key={kIndex}
+                                      type="button"
+                                      className={`cursor-pointer rounded-full px-2 py-0.5 text-xs transition-colors ${
+                                        selectedTechnologies.has(uniqueId)
+                                          ? "bg-primary text-primary-foreground"
+                                          : "bg-primary/10 hover:bg-primary/20"
+                                      }`}
+                                      onClick={() => {
+                                        toggleTechnology(uniqueId);
+                                      }}
+                                    >
+                                      {keyword}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Languages Section */}
+                  {resumes[0].data.sections.languages.items.length > 0 && (
+                    <div className="space-y-2 border-t pt-3">
+                      <span className="text-sm font-medium">{t`Languages`}:</span>
+                      <div className="flex flex-wrap gap-1">
+                        {resumes[0].data.sections.languages.items.map((language, index) => {
+                          const uniqueId = `language-${index}`;
+                          return (
+                            <button
+                              key={index}
+                              type="button"
+                              className={`cursor-pointer rounded-full px-3 py-1 text-sm transition-colors ${
+                                selectedItems.has(uniqueId)
+                                  ? "bg-primary text-primary-foreground"
+                                  : "bg-primary/10 hover:bg-primary/20"
+                              }`}
+                              onClick={() => {
+                                toggleItem(uniqueId);
+                              }}
+                            >
+                              {language.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Dynamic Sections */}
+                  {Object.entries(SECTION_CONFIG).map(([sectionKey, config]) => {
+                    const section = resumes[0].data.sections[sectionKey as keyof typeof SECTION_CONFIG];
+                    if (!section || !section.items || section.items.length === 0) return null;
+
+                    const singularKey = sectionKey.slice(0, -1);
+                    
+                    return (
+                      <div key={sectionKey} className="space-y-2 border-t pt-3">
+                        <span className="text-sm font-medium">{t`${config.labelKey}`}:</span>
+                        <div className="flex flex-wrap gap-1">
+                          {section.items.map((item: any, index: number) => {
+                            const uniqueId = `${singularKey}-${index}`;
+                            const displayName = item[config.nameField] || "";
+                            
+                            return (
+                              <button
+                                key={index}
+                                type="button"
+                                className={`cursor-pointer rounded-full px-3 py-1 text-sm transition-colors ${
+                                  selectedItems.has(uniqueId)
+                                    ? "bg-primary text-primary-foreground"
+                                    : "bg-primary/10 hover:bg-primary/20"
+                                }`}
+                                onClick={() => {
+                                  toggleItem(uniqueId);
+                                }}
+                              >
+                                {displayName}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
