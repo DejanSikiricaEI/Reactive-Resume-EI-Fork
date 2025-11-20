@@ -140,6 +140,77 @@ export const HRResumePage = () => {
     });
   };
 
+  const exportSelectedToJSON = () => {
+    if (!resumes || resumes.length === 0) return;
+
+    const resume = resumes[0];
+    const exportData: any = {
+      basics: resume.data.basics,
+      sections: {
+        skills: { items: [] as any[] },
+        interests: { items: [] as any[] },
+      },
+    };
+
+    // Export selected skills and their keywords
+    if (resume.data.sections.skills.items.length > 0) {
+      for (const [skillIndex, skill] of resume.data.sections.skills.items.entries()) {
+        const selectedKeywords = skill.keywords.filter((_, kIndex) => 
+          selectedTechnologies.has(`skill-${skillIndex}-${kIndex}`)
+        );
+        
+        if (selectedKeywords.length > 0) {
+          exportData.sections.skills.items.push({
+            ...skill,
+            keywords: selectedKeywords,
+          });
+        }
+      }
+    }
+
+    // Export selected interests and their keywords
+    if (resume.data.sections.interests.items.length > 0) {
+      for (const [interestIndex, interest] of resume.data.sections.interests.items.entries()) {
+        const selectedKeywords = interest.keywords.filter((_, kIndex) => 
+          selectedTechnologies.has(`interest-${interestIndex}-${kIndex}`)
+        );
+        
+        if (selectedKeywords.length > 0) {
+          exportData.sections.interests.items.push({
+            ...interest,
+            keywords: selectedKeywords,
+          });
+        }
+      }
+    }
+
+    // Export selected items from other sections
+    const sections = resume.data.sections;
+    for (const [sectionKey, section] of Object.entries(sections)) {
+      if (sectionKey === "skills" || sectionKey === "interests") continue;
+      
+      if (section && typeof section === "object" && "items" in section && Array.isArray(section.items)) {
+        exportData.sections[sectionKey] = {
+          items: section.items.filter((_, index) => 
+            selectedItems.has(`${sectionKey}-${index}`)
+          ),
+        };
+      }
+    }
+
+    // Create and download JSON file
+    const jsonString = JSON.stringify(exportData, null, 2);
+    const blob = new Blob([jsonString], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `resume-export-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <>
       <Helmet>
@@ -182,7 +253,14 @@ export const HRResumePage = () => {
 
       <main className="mx-6 my-4 lg:mx-8 lg:pl-[320px]">
         <div className="max-w-3xl space-y-4">
-          <h1 className="text-2xl font-bold">{t`HR Resume`}</h1>
+          <div className="flex items-center justify-between">
+            <h1 className="text-2xl font-bold">{t`HR Resume`}</h1>
+            {!isFetching && resumes && resumes.length > 0 && (
+              <Button onClick={exportSelectedToJSON} variant="outline">
+                {t`Export Selected to JSON`}
+              </Button>
+            )}
+          </div>
 
           {/* User Profile Section */}
           {!isFetching && resumes && resumes.length > 0 && (
@@ -496,7 +574,11 @@ export const HRResumePage = () => {
                                       return (
                                         <div key={key} className="flex gap-2">
                                           <span className="font-medium capitalize">{key}:</span>
-                                          <span className="opacity-75">{String(value)}</span>
+                                          <span className="opacity-75">
+                                            {key === "summary" 
+                                              ? String(value).replace(/<[^>]*>/g, '')
+                                              : String(value)}
+                                          </span>
                                         </div>
                                       );
                                     })}
