@@ -336,6 +336,11 @@ export const HRResumePage = () => {
           // This parser function resolves template expressions
           return {
             get: (scope: any, context: any) => {
+              // Handle special case: {.} means current value in array iteration
+              if (tag === '.') {
+                return scope;
+              }
+              
               // Handle dot notation (e.g., "basics.name")
               const keys = tag.split('.');
               let result = scope;
@@ -394,91 +399,11 @@ export const HRResumePage = () => {
       // Debug: Log the template data structure
       console.log("Template data for", templateName, ":", JSON.stringify(templateData, null, 2));
 
-      // TEST: Use dummy data to verify template replacement works
-      const dummyData = {
-        basics: {
-          name: "John Doe TEST",
-          headline: "Senior Software Engineer TEST",
-          email: "john.doe@test.com",
-          phone: "+1 234 567 8900",
-          location: "San Francisco, CA",
-          url_href: "https://johndoe.com",
-          url_label: "johndoe.com"
-        },
-        summary: {
-          content: "This is a test summary to verify template replacement is working correctly."
-        },
-        experience: {
-          items: [
-            {
-              position: "Senior Developer TEST",
-              company: "Test Company Inc",
-              location: "Test City",
-              date: "2020 - Present",
-              summary: "Test job description for the first position."
-            },
-            {
-              position: "Junior Developer TEST",
-              company: "Another Test Co",
-              location: "Test Town",
-              date: "2018 - 2020",
-              summary: "Test job description for the second position."
-            }
-          ]
-        },
-        education: {
-          items: [
-            {
-              studyType: "Bachelor TEST",
-              area: "Computer Science",
-              institution: "Test University",
-              location: "Test State",
-              date: "2014 - 2018",
-              summary: "Test education description."
-            }
-          ]
-        },
-        skills: {
-          items: [
-            {
-              name: "Programming Languages TEST",
-              description: "Test skill description",
-              keywords: ["JavaScript", "TypeScript", "Python", "Java"]
-            },
-            {
-              name: "Frameworks TEST",
-              description: "Another test skill",
-              keywords: ["React", "Node.js", "Express"]
-            }
-          ]
-        }
-      };
-
-      console.log("Using DUMMY DATA for testing:", JSON.stringify(dummyData, null, 2));
-
       // Render with data (newer API - setData is deprecated)
       try {
         console.log("Rendering with data...");
-        console.log("Type of dummyData:", typeof dummyData);
-        console.log("Is dummyData an object?", dummyData !== null && typeof dummyData === 'object');
-        console.log("dummyData.basics:", dummyData.basics);
-        console.log("dummyData.basics.name:", dummyData.basics?.name);
-        
-        doc.render(dummyData);
+        doc.render(templateData);
         console.log("Render completed successfully");
-        
-        // DEBUG: Check the rendered output
-        const renderedZip = doc.getZip();
-        const renderedXml = renderedZip.file('word/document.xml').asText();
-        console.log("First 500 chars of rendered XML:", renderedXml.substring(0, 500));
-        
-        // Check if placeholders still exist (they shouldn't)
-        const remainingPlaceholders = renderedXml.match(/\{[^}]+\}/g);
-        if (remainingPlaceholders) {
-          console.warn("WARNING: Placeholders still exist after render:", remainingPlaceholders);
-        } else {
-          console.log("✓ All placeholders were replaced");
-        }
         
       } catch (renderError: any) {
         console.error("Render error:", renderError);

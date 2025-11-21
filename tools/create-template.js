@@ -140,7 +140,7 @@ const createMinimalDocx = () => {
     </w:p>
     <w:p>
       <w:r>
-        <w:t xml:space="preserve">{#skills.items}{name} - {description}</w:t>
+        <w:t xml:space="preserve">{#skills.items}{name}{#description} - {description}{/description}</w:t>
       </w:r>
     </w:p>
     <w:p>
