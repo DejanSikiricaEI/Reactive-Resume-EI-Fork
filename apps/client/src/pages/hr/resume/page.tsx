@@ -292,8 +292,9 @@ export const HRResumePage = () => {
         }
       }
 
-      // Fetch the selected template
-      const templateResponse = await fetch(`/templates/docx/${templateName}.docx`);
+      // Fetch the selected template with cache busting
+      const cacheBuster = new Date().getTime();
+      const templateResponse = await fetch(`/templates/docx/${templateName}.docx?v=${cacheBuster}`);
       if (!templateResponse.ok) {
         throw new Error(`Failed to load ${templateName}.docx (status: ${templateResponse.status})`);
       }
@@ -317,7 +318,36 @@ export const HRResumePage = () => {
       console.log(`Converting to Uint8Array, length: ${uint8Array.length}`);
       
       const zip = new PizZip(uint8Array);
-      const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+      
+      // DEBUG: Check what's actually in the template
+      try {
+        const documentXml = zip.file('word/document.xml').asText();
+        const placeholders = documentXml.match(/\{[^}]+\}/g);
+        console.log("Placeholders found in template:", placeholders);
+      } catch (e) {
+        console.error("Could not read template XML:", e);
+      }
+      
+      // Initialize docxtemplater with proper parser
+      const doc = new Docxtemplater(zip, { 
+        paragraphLoop: true, 
+        linebreaks: true,
+        parser: (tag: string) => {
+          // This parser function resolves template expressions
+          return {
+            get: (scope: any, context: any) => {
+              // Handle dot notation (e.g., "basics.name")
+              const keys = tag.split('.');
+              let result = scope;
+              for (const key of keys) {
+                if (result == null) return undefined;
+                result = result[key];
+              }
+              return result;
+            }
+          };
+        }
+      });
 
       // Prepare template data - flatten structure for docxtemplater
       const templateData: Record<string, unknown> = {};
@@ -364,9 +394,99 @@ export const HRResumePage = () => {
       // Debug: Log the template data structure
       console.log("Template data for", templateName, ":", JSON.stringify(templateData, null, 2));
 
-      // Set data and render
-      doc.setData(templateData);
-      doc.render();
+      // TEST: Use dummy data to verify template replacement works
+      const dummyData = {
+        basics: {
+          name: "John Doe TEST",
+          headline: "Senior Software Engineer TEST",
+          email: "john.doe@test.com",
+          phone: "+1 234 567 8900",
+          location: "San Francisco, CA",
+          url_href: "https://johndoe.com",
+          url_label: "johndoe.com"
+        },
+        summary: {
+          content: "This is a test summary to verify template replacement is working correctly."
+        },
+        experience: {
+          items: [
+            {
+              position: "Senior Developer TEST",
+              company: "Test Company Inc",
+              location: "Test City",
+              date: "2020 - Present",
+              summary: "Test job description for the first position."
+            },
+            {
+              position: "Junior Developer TEST",
+              company: "Another Test Co",
+              location: "Test Town",
+              date: "2018 - 2020",
+              summary: "Test job description for the second position."
+            }
+          ]
+        },
+        education: {
+          items: [
+            {
+              studyType: "Bachelor TEST",
+              area: "Computer Science",
+              institution: "Test University",
+              location: "Test State",
+              date: "2014 - 2018",
+              summary: "Test education description."
+            }
+          ]
+        },
+        skills: {
+          items: [
+            {
+              name: "Programming Languages TEST",
+              description: "Test skill description",
+              keywords: ["JavaScript", "TypeScript", "Python", "Java"]
+            },
+            {
+              name: "Frameworks TEST",
+              description: "Another test skill",
+              keywords: ["React", "Node.js", "Express"]
+            }
+          ]
+        }
+      };
+
+      console.log("Using DUMMY DATA for testing:", JSON.stringify(dummyData, null, 2));
+
+      // Render with data (newer API - setData is deprecated)
+      try {
+        console.log("Rendering with data...");
+        console.log("Type of dummyData:", typeof dummyData);
+        console.log("Is dummyData an object?", dummyData !== null && typeof dummyData === 'object');
+        console.log("dummyData.basics:", dummyData.basics);
+        console.log("dummyData.basics.name:", dummyData.basics?.name);
+        
+        doc.render(dummyData);
+        console.log("Render completed successfully");
+        
+        // DEBUG: Check the rendered output
+        const renderedZip = doc.getZip();
+        const renderedXml = renderedZip.file('word/document.xml').asText();
+        console.log("First 500 chars of rendered XML:", renderedXml.substring(0, 500));
+        
+        // Check if placeholders still exist (they shouldn't)
+        const remainingPlaceholders = renderedXml.match(/\{[^}]+\}/g);
+        if (remainingPlaceholders) {
+          console.warn("WARNING: Placeholders still exist after render:", remainingPlaceholders);
+        } else {
+          console.log("✓ All placeholders were replaced");
+        }
+        
+      } catch (renderError: any) {
+        console.error("Render error:", renderError);
+        if (renderError.properties) {
+          console.error("Error properties:", renderError.properties);
+        }
+        throw renderError;
+      }
 
       // Generate the output blob
       const outBlob = doc.getZip().generate({

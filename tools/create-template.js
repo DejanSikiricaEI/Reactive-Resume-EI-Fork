@@ -34,179 +34,123 @@ const createMinimalDocx = () => {
 </Relationships>`);
 
   // word/document.xml with template placeholders
+  // Important: Keep placeholders in single <w:t> tags for docxtemplater to work
   zip.folder('word').file('document.xml', `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
   <w:body>
     <w:p>
-      <w:pPr>
-        <w:pStyle w:val="Title"/>
-      </w:pPr>
       <w:r>
-        <w:rPr>
-          <w:b/>
-          <w:sz w:val="32"/>
-        </w:rPr>
-        <w:t>{basics.name}</w:t>
+        <w:rPr><w:b/><w:sz w:val="32"/></w:rPr>
+        <w:t xml:space="preserve">{basics.name}</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:rPr>
-          <w:sz w:val="24"/>
-        </w:rPr>
-        <w:t>{basics.headline}</w:t>
+        <w:rPr><w:sz w:val="24"/></w:rPr>
+        <w:t xml:space="preserve">{basics.headline}</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:t>Email: {basics.email} | Phone: {basics.phone}</w:t>
+        <w:t xml:space="preserve">Email: {basics.email} | Phone: {basics.phone}</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:t>Location: {basics.location}</w:t>
+        <w:t xml:space="preserve">Location: {basics.location}</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:t>{#basics.url_href}Website: {basics.url_href}{/basics.url_href}</w:t>
+        <w:t xml:space="preserve">{#basics.url_href}Website: {basics.url_href}{/basics.url_href}</w:t>
       </w:r>
     </w:p>
+    <w:p><w:r><w:t xml:space="preserve"> </w:t></w:r></w:p>
     <w:p>
-      <w:pPr>
-        <w:pStyle w:val="Heading1"/>
-      </w:pPr>
       <w:r>
-        <w:rPr>
-          <w:b/>
-          <w:sz w:val="28"/>
-        </w:rPr>
-        <w:t>SUMMARY</w:t>
+        <w:rPr><w:b/><w:sz w:val="28"/></w:rPr>
+        <w:t xml:space="preserve">SUMMARY</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:t>{summary.content}</w:t>
+        <w:t xml:space="preserve">{summary.content}</w:t>
       </w:r>
     </w:p>
+    <w:p><w:r><w:t xml:space="preserve"> </w:t></w:r></w:p>
     <w:p>
-      <w:pPr>
-        <w:pStyle w:val="Heading1"/>
-      </w:pPr>
       <w:r>
-        <w:rPr>
-          <w:b/>
-          <w:sz w:val="28"/>
-        </w:rPr>
-        <w:t>EXPERIENCE</w:t>
-      </w:r>
-    </w:p>
-    <w:p w:rsidR="00000000" w:rsidRDefault="00000000">
-      <w:r>
-        <w:t>{#experience.items}</w:t>
+        <w:rPr><w:b/><w:sz w:val="28"/></w:rPr>
+        <w:t xml:space="preserve">EXPERIENCE</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:rPr>
-          <w:b/>
-        </w:rPr>
-        <w:t>{position} at {company}</w:t>
+        <w:t xml:space="preserve">{#experience.items}{position} at {company}</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:t>{location} | {date}</w:t>
+        <w:t xml:space="preserve">{location} | {date}</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:t>{summary}</w:t>
+        <w:t xml:space="preserve">{summary}</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:t>{/experience.items}</w:t>
+        <w:t xml:space="preserve">{/experience.items}</w:t>
       </w:r>
     </w:p>
+    <w:p><w:r><w:t xml:space="preserve"> </w:t></w:r></w:p>
     <w:p>
-      <w:pPr>
-        <w:pStyle w:val="Heading1"/>
-      </w:pPr>
       <w:r>
-        <w:rPr>
-          <w:b/>
-          <w:sz w:val="28"/>
-        </w:rPr>
-        <w:t>EDUCATION</w:t>
+        <w:rPr><w:b/><w:sz w:val="28"/></w:rPr>
+        <w:t xml:space="preserve">EDUCATION</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:t>{#education.items}</w:t>
+        <w:t xml:space="preserve">{#education.items}{studyType} in {area}</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:rPr>
-          <w:b/>
-        </w:rPr>
-        <w:t>{studyType} in {area}</w:t>
+        <w:t xml:space="preserve">{institution}, {location} | {date}</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:t>{institution}, {location} | {date}</w:t>
+        <w:t xml:space="preserve">{summary}</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:t>{summary}</w:t>
+        <w:t xml:space="preserve">{/education.items}</w:t>
+      </w:r>
+    </w:p>
+    <w:p><w:r><w:t xml:space="preserve"> </w:t></w:r></w:p>
+    <w:p>
+      <w:r>
+        <w:rPr><w:b/><w:sz w:val="28"/></w:rPr>
+        <w:t xml:space="preserve">SKILLS</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:t>{/education.items}</w:t>
-      </w:r>
-    </w:p>
-    <w:p>
-      <w:pPr>
-        <w:pStyle w:val="Heading1"/>
-      </w:pPr>
-      <w:r>
-        <w:rPr>
-          <w:b/>
-          <w:sz w:val="28"/>
-        </w:rPr>
-        <w:t>SKILLS</w:t>
+        <w:t xml:space="preserve">{#skills.items}{name} - {description}</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:t>{#skills.items}</w:t>
+        <w:t xml:space="preserve">Technologies: {#keywords}{.}, {/keywords}</w:t>
       </w:r>
     </w:p>
     <w:p>
       <w:r>
-        <w:rPr>
-          <w:b/>
-        </w:rPr>
-        <w:t>{name}</w:t>
-      </w:r>
-    </w:p>
-    <w:p>
-      <w:r>
-        <w:t>{description}</w:t>
-      </w:r>
-    </w:p>
-    <w:p>
-      <w:r>
-        <w:t>{#keywords}Technologies: {.}, {/keywords}</w:t>
-      </w:r>
-    </w:p>
-    <w:p>
-      <w:r>
-        <w:t>{/skills.items}</w:t>
+        <w:t xml:space="preserve">{/skills.items}</w:t>
       </w:r>
     </w:p>
   </w:body>
