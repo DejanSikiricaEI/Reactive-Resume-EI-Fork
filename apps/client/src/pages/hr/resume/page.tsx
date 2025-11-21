@@ -1,7 +1,7 @@
 import { t } from "@lingui/macro";
 import { SidebarSimpleIcon } from "@phosphor-icons/react";
 import type { ResumeDto } from "@reactive-resume/dto";
-import { Button, Sheet, SheetClose, SheetContent, SheetTrigger } from "@reactive-resume/ui";
+import { Button, Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Sheet, SheetClose, SheetContent, SheetTrigger } from "@reactive-resume/ui";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
@@ -22,6 +22,7 @@ export const HRResumePage = () => {
   const params = useParams() as { id?: string };
   const id = params.id ?? "";
   const [open, setOpen] = useState(false);
+  const [templateDialogOpen, setTemplateDialogOpen] = useState(false);
   const [selectedTechnologies, setSelectedTechnologies] = useState<Set<string>>(new Set());
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
@@ -223,6 +224,12 @@ export const HRResumePage = () => {
     URL.revokeObjectURL(url);
   };
 
+  const handleTemplateSelection = (templateName: string) => {
+    // This will be implemented in step 6
+    console.log("Selected template:", templateName);
+    setTemplateDialogOpen(false);
+  };
+
   return (
     <>
       <Helmet>
@@ -268,9 +275,14 @@ export const HRResumePage = () => {
           <div className="flex items-center justify-between">
             <h1 className="text-2xl font-bold">{t`HR Resume`}</h1>
             {!isFetching && resumes && resumes.length > 0 && (
-              <Button variant="outline" onClick={exportSelectedToJSON}>
-                {t`Export Selected to JSON`}
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={exportSelectedToJSON}>
+                  {t`Export Selected to JSON`}
+                </Button>
+                <Button variant="default" onClick={() => setTemplateDialogOpen(true)}>
+                  {t`Export to DOCX`}
+                </Button>
+              </div>
             )}
           </div>
 
@@ -624,6 +636,55 @@ export const HRResumePage = () => {
           <HRResumeList resumes={resumes ?? []} isLoading={isFetching} error={error} />
         </div>
       </main>
+
+      {/* Template Selection Dialog */}
+      <Dialog open={templateDialogOpen} onOpenChange={setTemplateDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t`Select DOCX Template`}</DialogTitle>
+            <DialogDescription>
+              {t`Choose a template to export your resume data to DOCX format.`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-1 gap-3 py-4">
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => handleTemplateSelection("template1")}
+            >
+              Template 1
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => handleTemplateSelection("template2")}
+            >
+              Template 2
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => handleTemplateSelection("template3")}
+            >
+              Template 3
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => handleTemplateSelection("template4")}
+            >
+              Template 4
+            </Button>
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => handleTemplateSelection("template5")}
+            >
+              Template 5
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };
