@@ -45,6 +45,84 @@ export const HRResumeList = ({ resumes, isLoading, error, className, children }:
     URL.revokeObjectURL(url);
   };
 
+  // Generate a .docx from template1.docx using PizZip + Docxtemplater
+  const exportDocx = async (r: ResumeDto) => {
+    try {
+      const id = r.id;
+      const originalData = (r as unknown as { data?: ResumeData }).data ?? {};
+      const maybeSections = (originalData as unknown as { sections?: unknown }).sections;
+      let sections: ResumeData = {};
+      if (typeof maybeSections === "object" && maybeSections !== null) {
+        sections = maybeSections as ResumeData;
+      }
+
+      const exported = {
+        ...originalData,
+        sections,
+      };
+
+      // Fetch template1.docx from public folder
+      const templateResponse = await fetch("/templates/docx/template1.docx");
+      if (!templateResponse.ok) {
+        throw new Error("Failed to load template1.docx");
+      }
+      const templateArrayBuffer = await templateResponse.arrayBuffer();
+
+      // Dynamic imports for PizZip and Docxtemplater
+      const PizZipModule = await import("pizzip");
+      const DocxtemplaterModule = await import("docxtemplater");
+      
+      // Handle both default and named exports
+      const PizZip = PizZipModule.default ?? PizZipModule;
+      const Docxtemplater = DocxtemplaterModule.default ?? DocxtemplaterModule;
+
+      const zip = new PizZip(templateArrayBuffer);
+      const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+
+      // Prepare template data - merge sections into top level for template compatibility
+      const templateData: Record<string, unknown> = { ...(exported as Record<string, unknown>) };
+      
+      // Merge sections into top-level for easier template access
+      if (typeof maybeSections === "object" && maybeSections !== null) {
+        Object.assign(templateData, maybeSections as Record<string, unknown>);
+      }
+
+      // Set data and render the document
+      doc.setData(templateData);
+
+      try {
+        doc.render();
+      } catch (renderError) {
+        // eslint-disable-next-line no-console
+        console.error("Docx rendering error:", renderError);
+        // Fallback to JSON export
+        exportResume(r);
+        return;
+      }
+
+      // Generate the output blob
+      const outBlob = doc.getZip().generate({
+        type: "blob",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+      const outUrl = URL.createObjectURL(outBlob);
+      const a = document.createElement("a");
+      const safeTitle = encodeURIComponent(r.title || "resume").replace(/%/g, "_");
+      const fileName = `${safeTitle}-${id}.docx`;
+      a.href = outUrl;
+      a.download = fileName;
+      document.body.append(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(outUrl);
+    } catch (error_) {
+      // On any error, fallback to JSON export
+      // eslint-disable-next-line no-console
+      console.error("DOCX export error:", error_);
+      exportResume(r);
+    }
+  };
+
 
   return (
     <div className={className}>
@@ -85,6 +163,15 @@ export const HRResumeList = ({ resumes, isLoading, error, className, children }:
                       }}
                     >
                       {t`CV Preview`}
+                    </button>
+                    <button
+                      type="button"
+                      className="rounded bg-gray-100 px-3 py-1 text-sm"
+                      onClick={() => {
+                        void exportDocx(r);
+                      }}
+                    >
+                      {t`Export DOCX`}
                     </button>
                     <button
                       type="button"
