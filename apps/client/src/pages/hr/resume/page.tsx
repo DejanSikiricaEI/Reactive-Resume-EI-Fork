@@ -319,11 +319,50 @@ export const HRResumePage = () => {
       const zip = new PizZip(uint8Array);
       const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
 
-      // Prepare template data - merge sections into top level for template compatibility
-      const templateData: Record<string, unknown> = { ...exportData };
+      // Prepare template data - flatten structure for docxtemplater
+      const templateData: Record<string, unknown> = {};
+      
+      // Add flattened basics
+      if (exportData.basics) {
+        const basics = exportData.basics as Record<string, any>;
+        templateData.basics = {
+          name: basics.name || '',
+          headline: basics.headline || '',
+          email: basics.email || '',
+          phone: basics.phone || '',
+          location: basics.location || '',
+        };
+        
+        // Flatten url object
+        if (basics.url && typeof basics.url === 'object') {
+          (templateData.basics as any).url_href = basics.url.href || '';
+          (templateData.basics as any).url_label = basics.url.label || basics.url.href || '';
+        }
+      }
+      
+      // Add sections at top level
       if (exportData.sections) {
         Object.assign(templateData, exportData.sections);
       }
+
+      // Flatten URL objects in all section items
+      for (const [key, value] of Object.entries(templateData)) {
+        if (value && typeof value === 'object' && 'items' in value && Array.isArray((value as any).items)) {
+          const items = (value as any).items;
+          for (const item of items) {
+            if (item && typeof item === 'object') {
+              // Flatten url objects
+              if (item.url && typeof item.url === 'object' && item.url.href) {
+                item.url_href = item.url.href;
+                item.url_label = item.url.label || item.url.href;
+              }
+            }
+          }
+        }
+      }
+
+      // Debug: Log the template data structure
+      console.log("Template data for", templateName, ":", JSON.stringify(templateData, null, 2));
 
       // Set data and render
       doc.setData(templateData);

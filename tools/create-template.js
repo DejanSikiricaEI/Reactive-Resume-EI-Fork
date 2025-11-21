@@ -64,7 +64,12 @@ const createMinimalDocx = () => {
     </w:p>
     <w:p>
       <w:r>
-        <w:t>Location: {basics.location} | Website: {basics.url.href}</w:t>
+        <w:t>Location: {basics.location}</w:t>
+      </w:r>
+    </w:p>
+    <w:p>
+      <w:r>
+        <w:t>{#basics.url_href}Website: {basics.url_href}{/basics.url_href}</w:t>
       </w:r>
     </w:p>
     <w:p>
@@ -196,7 +201,7 @@ const createMinimalDocx = () => {
     </w:p>
     <w:p>
       <w:r>
-        <w:t>Technologies: {#keywords}{.}, {/keywords}</w:t>
+        <w:t>{#keywords}Technologies: {.}, {/keywords}</w:t>
       </w:r>
     </w:p>
     <w:p>
@@ -210,14 +215,17 @@ const createMinimalDocx = () => {
   return zip.generate({ type: 'nodebuffer' });
 };
 
-// Generate and save the template
+// Generate and save templates
 try {
-  const docxBuffer = createMinimalDocx();
-  const templatePath = path.join(__dirname, '../apps/client/public/templates/docx/template1.docx');
+  const templateNames = ['template1', 'template2', 'template3', 'template4', 'template5'];
   
-  fs.writeFileSync(templatePath, docxBuffer);
-  console.log(`✓ Created template1.docx (${docxBuffer.length} bytes)`);
-  console.log(`  Location: ${templatePath}`);
+  for (const templateName of templateNames) {
+    const docxBuffer = createMinimalDocx();
+    const templatePath = path.join(__dirname, `../apps/client/public/templates/docx/${templateName}.docx`);
+    
+    fs.writeFileSync(templatePath, docxBuffer);
+    console.log(`✓ Created ${templateName}.docx (${docxBuffer.length} bytes)`);
+  }
   
 } catch (error) {
   console.error('Error creating template:', error);
