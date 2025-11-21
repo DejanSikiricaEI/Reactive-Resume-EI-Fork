@@ -224,10 +224,133 @@ export const HRResumePage = () => {
     URL.revokeObjectURL(url);
   };
 
-  const handleTemplateSelection = (templateName: string) => {
-    // This will be implemented in step 6
+  const handleTemplateSelection = async (templateName: string) => {
     console.log("Selected template:", templateName);
     setTemplateDialogOpen(false);
+
+    if (!resumes || resumes.length === 0) return;
+
+    try {
+      const resume = resumes[0];
+      
+      // Prepare export data with selected technologies and items
+      const exportData: any = {
+        basics: resume.data.basics,
+        sections: {
+          summary: resume.data.sections.summary,
+          skills: { items: [] as any[] },
+          interests: { items: [] as any[] },
+        },
+      };
+
+      // Export selected skills and their keywords
+      if (resume.data.sections.skills.items.length > 0) {
+        for (const [skillIndex, skill] of resume.data.sections.skills.items.entries()) {
+          const selectedKeywords = skill.keywords.filter((_, kIndex) =>
+            selectedTechnologies.has(`skill-${skillIndex}-${kIndex}`),
+          );
+
+          if (selectedKeywords.length > 0) {
+            exportData.sections.skills.items.push({
+              ...skill,
+              keywords: selectedKeywords,
+            });
+          }
+        }
+      }
+
+      // Export selected interests and their keywords
+      if (resume.data.sections.interests.items.length > 0) {
+        for (const [interestIndex, interest] of resume.data.sections.interests.items.entries()) {
+          const selectedKeywords = interest.keywords.filter((_, kIndex) =>
+            selectedTechnologies.has(`interest-${interestIndex}-${kIndex}`),
+          );
+
+          if (selectedKeywords.length > 0) {
+            exportData.sections.interests.items.push({
+              ...interest,
+              keywords: selectedKeywords,
+            });
+          }
+        }
+      }
+
+      // Export selected items from other sections
+      const sections = resume.data.sections;
+      for (const [sectionKey, section] of Object.entries(sections)) {
+        if (sectionKey === "skills" || sectionKey === "interests" || sectionKey === "summary") continue;
+
+        if (
+          section &&
+          typeof section === "object" &&
+          "items" in section &&
+          Array.isArray(section.items)
+        ) {
+          exportData.sections[sectionKey] = {
+            items: section.items.filter((_, index) => selectedItems.has(`${sectionKey}-${index}`)),
+          };
+        }
+      }
+
+      // Fetch the selected template
+      const templateResponse = await fetch(`/templates/docx/${templateName}.docx`);
+      if (!templateResponse.ok) {
+        throw new Error(`Failed to load ${templateName}.docx (status: ${templateResponse.status})`);
+      }
+      const templateArrayBuffer = await templateResponse.arrayBuffer();
+      
+      console.log(`Template loaded: ${templateName}.docx, size: ${templateArrayBuffer.byteLength} bytes`);
+      
+      if (templateArrayBuffer.byteLength === 0) {
+        throw new Error(`Template file ${templateName}.docx is empty`);
+      }
+
+      // Dynamic imports for PizZip and Docxtemplater
+      const PizZipModule = await import("pizzip");
+      const DocxtemplaterModule = await import("docxtemplater");
+      
+      const PizZip = PizZipModule.default ?? PizZipModule;
+      const Docxtemplater = DocxtemplaterModule.default ?? DocxtemplaterModule;
+
+      // Convert ArrayBuffer to Uint8Array for PizZip
+      const uint8Array = new Uint8Array(templateArrayBuffer);
+      console.log(`Converting to Uint8Array, length: ${uint8Array.length}`);
+      
+      const zip = new PizZip(uint8Array);
+      const doc = new Docxtemplater(zip, { paragraphLoop: true, linebreaks: true });
+
+      // Prepare template data - merge sections into top level for template compatibility
+      const templateData: Record<string, unknown> = { ...exportData };
+      if (exportData.sections) {
+        Object.assign(templateData, exportData.sections);
+      }
+
+      // Set data and render
+      doc.setData(templateData);
+      doc.render();
+
+      // Generate the output blob
+      const outBlob = doc.getZip().generate({
+        type: "blob",
+        mimeType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      });
+      
+      const outUrl = URL.createObjectURL(outBlob);
+      const a = document.createElement("a");
+      const safeTitle = encodeURIComponent(resume.title || "resume").replace(/%/g, "_");
+      const fileName = `${safeTitle}-${templateName}-${new Date().toISOString().split("T")[0]}.docx`;
+      a.href = outUrl;
+      a.download = fileName;
+      document.body.append(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(outUrl);
+      
+      console.log("DOCX export successful");
+    } catch (error) {
+      console.error("DOCX export error:", error);
+      alert(`Failed to export DOCX: ${error instanceof Error ? error.message : String(error)}`);
+    }
   };
 
   return (
