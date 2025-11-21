@@ -225,7 +225,6 @@ export const HRResumePage = () => {
   };
 
   const handleTemplateSelection = async (templateName: string) => {
-    console.log("Selected template:", templateName);
     setTemplateDialogOpen(false);
 
     if (!resumes || resumes.length === 0) return;
@@ -300,8 +299,6 @@ export const HRResumePage = () => {
       }
       const templateArrayBuffer = await templateResponse.arrayBuffer();
       
-      console.log(`Template loaded: ${templateName}.docx, size: ${templateArrayBuffer.byteLength} bytes`);
-      
       if (templateArrayBuffer.byteLength === 0) {
         throw new Error(`Template file ${templateName}.docx is empty`);
       }
@@ -315,18 +312,8 @@ export const HRResumePage = () => {
 
       // Convert ArrayBuffer to Uint8Array for PizZip
       const uint8Array = new Uint8Array(templateArrayBuffer);
-      console.log(`Converting to Uint8Array, length: ${uint8Array.length}`);
       
       const zip = new PizZip(uint8Array);
-      
-      // DEBUG: Check what's actually in the template
-      try {
-        const documentXml = zip.file('word/document.xml').asText();
-        const placeholders = documentXml.match(/\{[^}]+\}/g);
-        console.log("Placeholders found in template:", placeholders);
-      } catch (e) {
-        console.error("Could not read template XML:", e);
-      }
       
       // Initialize docxtemplater with proper parser
       const doc = new Docxtemplater(zip, { 
@@ -396,14 +383,9 @@ export const HRResumePage = () => {
         }
       }
 
-      // Debug: Log the template data structure
-      console.log("Template data for", templateName, ":", JSON.stringify(templateData, null, 2));
-
       // Render with data (newer API - setData is deprecated)
       try {
-        console.log("Rendering with data...");
         doc.render(templateData);
-        console.log("Render completed successfully");
         
       } catch (renderError: any) {
         console.error("Render error:", renderError);
@@ -429,8 +411,6 @@ export const HRResumePage = () => {
       a.click();
       a.remove();
       URL.revokeObjectURL(outUrl);
-      
-      console.log("DOCX export successful");
     } catch (error) {
       console.error("DOCX export error:", error);
       alert(`Failed to export DOCX: ${error instanceof Error ? error.message : String(error)}`);
