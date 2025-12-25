@@ -35,6 +35,7 @@ import { GitHubGuard } from "./guards/github.guard";
 import { GoogleGuard } from "./guards/google.guard";
 import { JwtGuard } from "./guards/jwt.guard";
 import { LocalGuard } from "./guards/local.guard";
+import { MicrosoftGuard } from "./guards/microsoft.guard";
 import { OpenIDGuard } from "./guards/openid.guard";
 import { RefreshGuard } from "./guards/refresh.guard";
 import { TwoFactorGuard } from "./guards/two-factor.guard";
@@ -144,6 +145,30 @@ export class AuthController {
     @Res({ passthrough: true }) response: Response,
   ) {
     return this.handleAuthenticationResponse(user, response, false, true);
+  }
+
+  @ApiTags("OAuth", "Microsoft")
+  @Get("microsoft")
+  @UseGuards(MicrosoftGuard)
+  microsoftLogin() {
+    return;
+  }
+
+  @ApiTags("OAuth", "Microsoft")
+  @Get("microsoft/callback")
+  @UseGuards(MicrosoftGuard)
+  async microsoftCallback(
+    @User() user: UserWithSecrets,
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    try {
+      return this.handleAuthenticationResponse(user, response, false, true);
+    } catch {
+      const baseUrl = this.configService.get("PUBLIC_URL");
+      const errorUrl = new URL(`${baseUrl}/auth/login`);
+      errorUrl.searchParams.set("error", "OAuthCallback");
+      response.redirect(errorUrl.toString());
+    }
   }
 
   @ApiTags("OAuth", "OpenID")

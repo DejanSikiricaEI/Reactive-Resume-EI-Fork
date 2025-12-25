@@ -296,6 +296,9 @@ importers:
       passport-local:
         specifier: ^1.0.0
         version: 1.0.0
+      passport-microsoft:
+        specifier: ^2.1.0
+        version: 2.1.0
       passport-openidconnect:
         specifier: ^0.1.2
         version: 0.1.2
@@ -9355,6 +9358,10 @@ packages:
 
   passport-local@1.0.0:
     resolution: {integrity: sha512-9wCE6qKznvf9mQYYbgJ3sVOHmCWoUNMVFoZzNoznmISbhnNNPhN9xfY3sLmScHMetEJeoY7CXwfhCe7argfQow==}
+    engines: {node: '>= 0.4.0'}
+
+  passport-microsoft@2.1.0:
+    resolution: {integrity: sha512-7bOcjEmZCHg5qD55iHaMD/mgBxPtXLbqAwmKox5IsqOSEU50WJk5nQKK4lxKdBHLZ0hf+gzrFgDsTybJP18/JA==}
     engines: {node: '>= 0.4.0'}
 
   passport-oauth2@1.8.0:
@@ -22983,6 +22990,10 @@ snapshots:
   passport-local@1.0.0:
     dependencies:
       passport-strategy: 1.0.0
+
+  passport-microsoft@2.1.0:
+    dependencies:
+      passport-oauth2: 1.8.0
 
   passport-oauth2@1.8.0:
     dependencies:

@@ -226,6 +226,14 @@ export class AuthService {
     }
 
     if (
+      this.configService.get("MICROSOFT_CLIENT_ID") &&
+      this.configService.get("MICROSOFT_CLIENT_SECRET") &&
+      this.configService.get("MICROSOFT_CALLBACK_URL")
+    ) {
+      providers.push("microsoft");
+    }
+
+    if (
       this.configService.get("OPENID_AUTHORIZATION_URL") &&
       this.configService.get("OPENID_CALLBACK_URL") &&
       this.configService.get("OPENID_CLIENT_ID") &&

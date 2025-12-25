@@ -223,6 +223,7 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "passport-local": "^1.0.0",
+    "passport-microsoft": "^2.1.0",
     "passport-openidconnect": "^0.1.2",
     "pdf-lib": "^1.17.1",
     "pizzip": "^3.2.0",
