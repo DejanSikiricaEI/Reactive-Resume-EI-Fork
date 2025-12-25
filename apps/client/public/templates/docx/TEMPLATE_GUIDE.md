@@ -229,4 +229,4 @@ The DOCX export feature in `apps/client/src/components/hr/resume-list.tsx`:
 1. Open `template1.docx` in Microsoft Word
 2. Use the variable syntax above (e.g., `{basics.name}`)
 3. Save the file back to `apps/client/public/templates/docx/template1.docx`
-4. Test by exporting a resume from the HR interface
+4. Test by exporting a resume from the HR interface and use it
